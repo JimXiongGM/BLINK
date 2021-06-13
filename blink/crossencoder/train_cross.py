@@ -26,15 +26,15 @@ from pytorch_transformers.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from pytorch_transformers.optimization import WarmupLinearSchedule
 from pytorch_transformers.tokenization_bert import BertTokenizer
 
-import blink.candidate_retrieval.utils
-from blink.crossencoder.crossencoder import CrossEncoderRanker, load_crossencoder
+import candidate_retrieval.utils
+from crossencoder.crossencoder import CrossEncoderRanker, load_crossencoder
 import logging
 
-import blink.candidate_ranking.utils as utils
-import blink.biencoder.data_process as data
-from blink.biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
-from blink.common.optimizer import get_bert_optimizer
-from blink.common.params import BlinkParser
+import candidate_ranking.utils as utils
+import biencoder.data_process as data
+from biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
+from common.optimizer import get_bert_optimizer
+from common.params import BlinkParser
 
 
 logger = None

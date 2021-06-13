@@ -10,8 +10,8 @@ import logging
 import torch
 from tqdm import tqdm
 
-import blink.candidate_ranking.utils as utils
-from blink.biencoder.zeshel_utils import WORLDS, Stats
+import candidate_ranking.utils as utils
+from biencoder.zeshel_utils import WORLDS, Stats
 
 
 def get_topk_predictions(

@@ -7,8 +7,8 @@
 import argparse
 import prettytable
 
-import blink.main_dense as main_dense
-import blink.candidate_ranking.utils as utils
+import main_dense as main_dense
+import candidate_ranking.utils as utils
 
 DATASETS = [
     {
@@ -38,12 +38,12 @@ PARAMETERS = {
     "test_entities": None,
     "test_mentions": None,
     "interactive": False,
-    "biencoder_model": "models/biencoder_wiki_large.bin",
-    "biencoder_config": "models/biencoder_wiki_large.json",
-    "entity_catalogue": "models/entity.jsonl",
-    "entity_encoding": "models/all_entities_large.t7",
-    "crossencoder_model": "models/crossencoder_wiki_large.bin",
-    "crossencoder_config": "models/crossencoder_wiki_large.json",
+    "biencoder_model": "blink_elq_data/blink/models/biencoder_wiki_large.bin",
+    "biencoder_config": "blink_elq_data/blink/models/biencoder_wiki_large.json",
+    "entity_catalogue": "blink_elq_data/blink/models/entity.jsonl",
+    "entity_encoding": "blink_elq_data/blink/models/all_entities_large.t7",
+    "crossencoder_model": "blink_elq_data/blink/models/crossencoder_wiki_large.bin",
+    "crossencoder_config": "blink_elq_data/blink/models/crossencoder_wiki_large.json",
     "output_path": "output",
     "fast": False,
     "top_k": 100,

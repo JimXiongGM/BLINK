@@ -20,7 +20,7 @@ from colorama import init
 from termcolor import colored
 import torch.nn.functional as F
 
-import blink.ner as NER
+import ner as NER
 from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
 from elq.biencoder.biencoder import BiEncoderRanker, load_biencoder, to_bert_input
 from elq.biencoder.data_process import (

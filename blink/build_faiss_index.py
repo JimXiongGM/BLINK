@@ -11,8 +11,8 @@ import os
 import time
 import torch
 
-from blink.indexer.faiss_indexer import DenseFlatIndexer, DenseHNSWFlatIndexer
-import blink.candidate_ranking.utils as utils
+from indexer.faiss_indexer import DenseFlatIndexer, DenseHNSWFlatIndexer
+import candidate_ranking.utils as utils
 
 logger = utils.get_logger()
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--candidate_encoding",
-        default="models/all_entities_large.t7",
+        default="blink_elq_data/blink/models/all_entities_large.t7",
         type=str,
         help="file path for candidte encoding.",
     )

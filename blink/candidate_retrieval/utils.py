@@ -7,7 +7,7 @@
 import sys
 import pickle
 import subprocess
-import blink.candidate_retrieval.dataset as D
+import candidate_retrieval.dataset as D
 
 import re
 import os

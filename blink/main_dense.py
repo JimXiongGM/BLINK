@@ -15,25 +15,25 @@ import numpy as np
 from colorama import init
 from termcolor import colored
 
-import blink.ner as NER
+import ner as NER
 from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
-from blink.biencoder.biencoder import BiEncoderRanker, load_biencoder
-from blink.crossencoder.crossencoder import CrossEncoderRanker, load_crossencoder
-from blink.biencoder.data_process import (
+from biencoder.biencoder import BiEncoderRanker, load_biencoder
+from crossencoder.crossencoder import CrossEncoderRanker, load_crossencoder
+from biencoder.data_process import (
     process_mention_data,
     get_candidate_representation,
 )
-import blink.candidate_ranking.utils as utils
-from blink.crossencoder.train_cross import modify, evaluate
-from blink.crossencoder.data_process import prepare_crossencoder_data
-from blink.indexer.faiss_indexer import DenseFlatIndexer, DenseHNSWFlatIndexer
+import candidate_ranking.utils as utils
+from crossencoder.train_cross import modify, evaluate
+from crossencoder.data_process import prepare_crossencoder_data
+from indexer.faiss_indexer import DenseFlatIndexer, DenseHNSWFlatIndexer
 
 
 HIGHLIGHTS = [
     "on_red",
     "on_green",
     "on_yellow",
-    "on_blue",
+models    "on_blue",
     "on_magenta",
     "on_cyan",
 ]
@@ -622,30 +622,30 @@ if __name__ == "__main__":
         "--biencoder_model",
         dest="biencoder_model",
         type=str,
-        default="models/biencoder_wiki_large.bin",
+        default="blink_elq_data/blink/models/biencoder_wiki_large.bin",
         help="Path to the biencoder model.",
     )
     parser.add_argument(
         "--biencoder_config",
         dest="biencoder_config",
         type=str,
-        default="models/biencoder_wiki_large.json",
+        default="blink_elq_data/blink/models/biencoder_wiki_large.json",
         help="Path to the biencoder configuration.",
     )
     parser.add_argument(
         "--entity_catalogue",
         dest="entity_catalogue",
         type=str,
-        # default="models/tac_entity.jsonl",  # TAC-KBP
-        default="models/entity.jsonl",  # ALL WIKIPEDIA!
+        # default="blink_elq_data/blink/models/tac_entity.jsonl",  # TAC-KBP
+        default="blink_elq_data/blink/models/entity.jsonl",  # ALL WIKIPEDIA!
         help="Path to the entity catalogue.",
     )
     parser.add_argument(
         "--entity_encoding",
         dest="entity_encoding",
         type=str,
-        # default="models/tac_candidate_encode_large.t7",  # TAC-KBP
-        default="models/all_entities_large.t7",  # ALL WIKIPEDIA!
+        # default="blink_elq_data/blink/models/tac_candidate_encode_large.t7",  # TAC-KBP
+        default="blink_elq_data/blink/models/all_entities_large.t7",  # ALL WIKIPEDIA!
         help="Path to the entity catalogue.",
     )
 
@@ -654,14 +654,14 @@ if __name__ == "__main__":
         "--crossencoder_model",
         dest="crossencoder_model",
         type=str,
-        default="models/crossencoder_wiki_large.bin",
+        default="blink_elq_data/blink/models/crossencoder_wiki_large.bin",
         help="Path to the crossencoder model.",
     )
     parser.add_argument(
         "--crossencoder_config",
         dest="crossencoder_config",
         type=str,
-        default="models/crossencoder_wiki_large.json",
+        default="blink_elq_data/blink/models/crossencoder_wiki_large.json",
         help="Path to the crossencoder configuration.",
     )
 

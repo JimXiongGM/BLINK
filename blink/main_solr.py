@@ -6,11 +6,11 @@
 #
 import os
 
-import blink.utils as utils
-import blink.ner as NER
-import blink.candidate_generation as CG
-import blink.candidate_data_fetcher as CDF
-import blink.reranker as R
+import utils as utils
+import ner as NER
+import candidate_generation as CG
+import candidate_data_fetcher as CDF
+import reranker as R
 
 import argparse
 import shutil

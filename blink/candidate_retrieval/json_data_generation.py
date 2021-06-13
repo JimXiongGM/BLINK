@@ -12,7 +12,7 @@ import sys
 import os
 import io
 
-import blink.candidate_retrieval.utils as utils
+import candidate_retrieval.utils as utils
 
 from tqdm import tqdm
 

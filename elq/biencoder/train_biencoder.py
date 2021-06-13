@@ -37,8 +37,8 @@ import logging
 
 import elq.candidate_ranking.utils as utils
 from elq.biencoder.data_process import process_mention_data
-from blink.biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
-from blink.common.optimizer import get_bert_optimizer
+from biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
+from common.optimizer import get_bert_optimizer
 from elq.common.params import ElqParser
 from elq.index.faiss_indexer import (
     DenseFlatIndexer,

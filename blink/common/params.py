@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 #
 
-# Provide an argument parser and default command line options for using BLINK.
+# Provide an argument parser and default command line options for using 
 import argparse
 import importlib
 import os

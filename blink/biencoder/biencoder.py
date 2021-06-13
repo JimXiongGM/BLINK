@@ -19,8 +19,8 @@ from pytorch_transformers.modeling_bert import (
 
 from pytorch_transformers.tokenization_bert import BertTokenizer
 
-from blink.common.ranker_base import BertEncoder, get_model_obj
-from blink.common.optimizer import get_bert_optimizer
+from common.ranker_base import BertEncoder, get_model_obj
+from common.optimizer import get_bert_optimizer
 
 
 def load_biencoder(params):

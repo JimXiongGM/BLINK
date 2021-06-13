@@ -9,8 +9,8 @@ import sys
 
 import numpy as np
 from tqdm import tqdm
-import blink.biencoder.data_process as data
-from blink.common.params import ENT_START_TAG, ENT_END_TAG
+import biencoder.data_process as data
+from common.params import ENT_START_TAG, ENT_END_TAG
 
 
 def prepare_crossencoder_mentions(

@@ -9,7 +9,7 @@ import os
 import pysolr
 import sys
 
-import blink.candidate_retrieval.utils as utils
+import candidate_retrieval.utils as utils
 
 
 def get_model(params):
