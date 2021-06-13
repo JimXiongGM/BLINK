@@ -40,7 +40,7 @@ class BiEncoderModule(torch.nn.Module):
             layer_pulled=params["pull_from_layer"],
             add_linear=params["add_linear"],
         )
-        self.cand_encoder = BertEncoder(
+        self.cand_encoder = BertEncoder( # 对上面初始化的两个bert做了进一步的封装
             cand_bert,
             params["out_dim"],
             layer_pulled=params["pull_from_layer"],

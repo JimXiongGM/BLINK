@@ -29,11 +29,12 @@ from crossencoder.data_process import prepare_crossencoder_data
 from indexer.faiss_indexer import DenseFlatIndexer, DenseHNSWFlatIndexer
 
 
+
 HIGHLIGHTS = [
     "on_red",
     "on_green",
     "on_yellow",
-models    "on_blue",
+    "on_blue",
     "on_magenta",
     "on_cyan",
 ]
@@ -301,6 +302,7 @@ def load_models(args, logger=None):
         logger.info("loading biencoder model")
     with open(args.biencoder_config) as json_file:
         biencoder_params = json.load(json_file)
+        biencoder_params['bert_model'] = "pretrained_models/bert-large-uncased"
         biencoder_params["path_to_model"] = args.biencoder_model
     biencoder = load_biencoder(biencoder_params)
 
@@ -312,8 +314,9 @@ def load_models(args, logger=None):
             logger.info("loading crossencoder model")
         with open(args.crossencoder_config) as json_file:
             crossencoder_params = json.load(json_file)
+            crossencoder_params['bert_model'] = "pretrained_models/bert-large-uncased"
             crossencoder_params["path_to_model"] = args.crossencoder_model
-        crossencoder = load_crossencoder(crossencoder_params)
+        crossencoder = load_crossencoder(crossencoder_params) # 又是一个bert large
 
     # load candidate entities
     if logger:
@@ -608,6 +611,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--interactive", "-i", action="store_true", help="Interactive mode."
     )
+    parser.set_defaults(interactive=True)
 
     # test_data
     parser.add_argument(
