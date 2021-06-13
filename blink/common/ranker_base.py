@@ -11,9 +11,9 @@ def get_model_obj(model):
     model = model.module if hasattr(model, "module") else model
     return model
 
+
 class BertEncoder(nn.Module):
-    def __init__(
-        self, bert_model, output_dim, layer_pulled=-1, add_linear=None):
+    def __init__(self, bert_model, output_dim, layer_pulled=-1, add_linear=None):
         super(BertEncoder, self).__init__()
         self.layer_pulled = layer_pulled
         bert_output_dim = bert_model.embeddings.word_embeddings.weight.size(1)
@@ -42,4 +42,3 @@ class BertEncoder(nn.Module):
             result = embeddings
 
         return result
-

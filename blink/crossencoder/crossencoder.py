@@ -57,7 +57,10 @@ class CrossEncoderModule(torch.nn.Module):
         self.config = self.encoder.bert_model.config
 
     def forward(
-        self, token_idx_ctxt, segment_idx_ctxt, mask_ctxt,
+        self,
+        token_idx_ctxt,
+        segment_idx_ctxt,
+        mask_ctxt,
     ):
         embedding_ctxt = self.encoder(token_idx_ctxt, segment_idx_ctxt, mask_ctxt)
         return embedding_ctxt.squeeze(-1)
@@ -73,7 +76,9 @@ class CrossEncoderRanker(torch.nn.Module):
         self.n_gpu = torch.cuda.device_count()
 
         if params.get("roberta"):
-            self.tokenizer = RobertaTokenizer.from_pretrained(params["bert_model"],)
+            self.tokenizer = RobertaTokenizer.from_pretrained(
+                params["bert_model"],
+            )
         else:
             self.tokenizer = BertTokenizer.from_pretrained(
                 params["bert_model"], do_lower_case=params["lowercase"]
@@ -90,7 +95,7 @@ class CrossEncoderRanker(torch.nn.Module):
         self.NULL_IDX = self.tokenizer.pad_token_id
         self.START_TOKEN = self.tokenizer.cls_token
         self.END_TOKEN = self.tokenizer.sep_token
-        
+
         # init model
         self.build_model()
         if params["path_to_model"] is not None:
@@ -114,11 +119,11 @@ class CrossEncoderRanker(torch.nn.Module):
 
     def build_model(self):
         self.model = CrossEncoderModule(self.params, self.tokenizer)
-    
+
     def save_model(self, output_dir):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        model_to_save = get_model_obj(self.model) 
+        model_to_save = get_model_obj(self.model)
         output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
         output_config_file = os.path.join(output_dir, CONFIG_NAME)
         torch.save(model_to_save.state_dict(), output_model_file)
@@ -137,9 +142,15 @@ class CrossEncoderRanker(torch.nn.Module):
         num_cand = text_vecs.size(1)
         text_vecs = text_vecs.view(-1, text_vecs.size(-1))
         token_idx_ctxt, segment_idx_ctxt, mask_ctxt = to_bert_input(
-            text_vecs, self.NULL_IDX, context_len,
+            text_vecs,
+            self.NULL_IDX,
+            context_len,
         )
-        embedding_ctxt = self.model(token_idx_ctxt, segment_idx_ctxt, mask_ctxt,)
+        embedding_ctxt = self.model(
+            token_idx_ctxt,
+            segment_idx_ctxt,
+            mask_ctxt,
+        )
 
         return embedding_ctxt.view(-1, num_cand)
 
@@ -150,8 +161,8 @@ class CrossEncoderRanker(torch.nn.Module):
 
 
 def to_bert_input(token_idx, null_idx, segment_pos):
-    """ token_idx is a 2D tensor int.
-        return token_idx, segment_idx and mask
+    """token_idx is a 2D tensor int.
+    return token_idx, segment_idx and mask
     """
     segment_idx = token_idx * 0
     if segment_pos > 0:

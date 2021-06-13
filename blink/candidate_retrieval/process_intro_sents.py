@@ -65,4 +65,3 @@ for title in tqdm(title2parsed_obj_full.keys()):
 
 print("Dumping", output_file_path)
 pickle.dump(title2parsed_obj, open(output_file_path, "wb"), protocol=4)
-

@@ -274,7 +274,15 @@ def _run_crossencoder(crossencoder, dataloader, logger, context_len, device="cud
     accuracy = 0.0
     crossencoder.to(device)
 
-    res = evaluate(crossencoder, dataloader, device, logger, context_len, zeshel=False, silent=False)
+    res = evaluate(
+        crossencoder,
+        dataloader,
+        device,
+        logger,
+        context_len,
+        zeshel=False,
+        silent=False,
+    )
     accuracy = res["normalized_accuracy"]
     logits = res["logits"]
 
@@ -318,10 +326,10 @@ def load_models(args, logger=None):
         wikipedia_id2local_id,
         faiss_indexer,
     ) = _load_candidates(
-        args.entity_catalogue, 
-        args.entity_encoding, 
-        faiss_index=getattr(args, 'faiss_index', None), 
-        index_path=getattr(args, 'index_path' , None),
+        args.entity_catalogue,
+        args.entity_encoding,
+        faiss_index=getattr(args, "faiss_index", None),
+        index_path=getattr(args, "index_path", None),
         logger=logger,
     )
 
@@ -499,7 +507,13 @@ def run(
 
         # prepare crossencoder data
         context_input, candidate_input, label_input = prepare_crossencoder_data(
-            crossencoder.tokenizer, samples, labels, nns, id2title, id2text, keep_all,
+            crossencoder.tokenizer,
+            samples,
+            labels,
+            nns,
+            id2title,
+            id2text,
+            keep_all,
         )
 
         context_input = modify(
@@ -570,7 +584,9 @@ def run(
 
                 if len(samples) > 0:
                     overall_unormalized_accuracy = (
-                        crossencoder_normalized_accuracy * len(label_input) / len(samples)
+                        crossencoder_normalized_accuracy
+                        * len(label_input)
+                        / len(samples)
                     )
                 print(
                     "overall unnormalized accuracy: %.4f" % overall_unormalized_accuracy
@@ -678,11 +694,17 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--faiss_index", type=str, default=None, help="whether to use faiss index",
+        "--faiss_index",
+        type=str,
+        default=None,
+        help="whether to use faiss index",
     )
 
     parser.add_argument(
-        "--index_path", type=str, default=None, help="path to load indexer",
+        "--index_path",
+        type=str,
+        default=None,
+        help="path to load indexer",
     )
 
     args = parser.parse_args()

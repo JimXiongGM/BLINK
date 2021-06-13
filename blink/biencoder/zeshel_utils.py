@@ -12,25 +12,25 @@ import torch
 DOC_PATH = "/private/home/ledell/zeshel/data/documents/"
 
 WORLDS = [
-    'american_football',
-    'doctor_who',
-    'fallout',
-    'final_fantasy',
-    'military',
-    'pro_wrestling',
-    'starwars',
-    'world_of_warcraft',
-    'coronation_street',
-    'muppets',
-    'ice_hockey',
-    'elder_scrolls',
-    'forgotten_realms',
-    'lego',
-    'star_trek',
-    'yugioh'
+    "american_football",
+    "doctor_who",
+    "fallout",
+    "final_fantasy",
+    "military",
+    "pro_wrestling",
+    "starwars",
+    "world_of_warcraft",
+    "coronation_street",
+    "muppets",
+    "ice_hockey",
+    "elder_scrolls",
+    "forgotten_realms",
+    "lego",
+    "star_trek",
+    "yugioh",
 ]
 
-world_to_id = {src : k for k, src in enumerate(WORLDS)}
+world_to_id = {src: k for k, src in enumerate(WORLDS)}
 
 
 def load_entity_dict_zeshel(logger, params):
@@ -51,7 +51,7 @@ def load_entity_dict_zeshel(logger, params):
         cur_dict = {}
         doc_list = []
         src_id = world_to_id[src]
-        with open(fname, 'rt') as f:
+        with open(fname, "rt") as f:
             for line in f:
                 line = line.rstrip()
                 item = json.loads(line)
@@ -67,13 +67,13 @@ def load_entity_dict_zeshel(logger, params):
     return entity_dict
 
 
-class Stats():
+class Stats:
     def __init__(self, top_k=1000):
         self.cnt = 0
         self.hits = []
         self.top_k = top_k
         self.rank = [1, 4, 8, 16, 32, 64, 100, 128, 256, 512]
-        self.LEN = len(self.rank) 
+        self.LEN = len(self.rank)
         for i in range(self.LEN):
             self.hits.append(0)
 
@@ -95,6 +95,8 @@ class Stats():
         for i in range(self.LEN):
             if self.top_k < self.rank[i]:
                 break
-            output_json += " r@%d: %.4f" % (self.rank[i], self.hits[i] / float(self.cnt))
+            output_json += " r@%d: %.4f" % (
+                self.rank[i],
+                self.hits[i] / float(self.cnt),
+            )
         return output_json
-

@@ -92,4 +92,3 @@ with io.open(input_file_path, mode="rt", encoding="utf-8", errors="ignore") as f
 print("Processed: {:.2f}%".format(c * 100 / num_lines))
 print("Dumping", output_file_path)
 pickle.dump(id_title2parsed_obj, open(output_file_path, "wb"), protocol=4)
-

@@ -83,7 +83,7 @@ def get_logger(output_dir=None):
             handlers=[logging.StreamHandler(sys.stdout)],
         )
 
-    logger = logging.getLogger('Blink')
+    logger = logging.getLogger("Blink")
     logger.setLevel(10)
     return logger
 

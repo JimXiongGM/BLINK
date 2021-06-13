@@ -108,4 +108,3 @@ for dataset_name in dataset2processed_mentions:
 
             if idx != (len(processed_mentions) - 1):
                 file.write("\n")
-

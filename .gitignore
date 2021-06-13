@@ -263,3 +263,9 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/c++,java,linux,macos,python
+img/*.bin
+img/*.txt
+img/*.pkl*
+img/*.t7
+img/*.json
+.vscode/settings.json

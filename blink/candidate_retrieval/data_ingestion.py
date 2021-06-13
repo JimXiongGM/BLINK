@@ -183,4 +183,3 @@ solr.add(ingestion_data[l : len(ingestion_data)], commit=True)
 solr.commit()
 
 print("The processing took:", (time.time() - wall_start) / 60, " minutes")
-

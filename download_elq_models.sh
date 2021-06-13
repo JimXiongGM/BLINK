@@ -16,32 +16,24 @@ DST_DIR="$ROOT_DIR/models"
 mkdir -p "$DST_DIR"
 cd "$DST_DIR"
 
-if [[ ! -f elq_wiki_large.bin ]]; then
-    wget http://dl.fbaipublicfiles.com/elq/elq_wiki_large.bin
-fi
+# 长度： 2681381121 (2.5G)
+wget -c http://dl.fbaipublicfiles.com/elq/elq_wiki_large.bin
 
-if [[ ! -f elq_webqsp_large.bin ]]; then
-    wget http://dl.fbaipublicfiles.com/elq/elq_webqsp_large.bin
-fi
+# 长度： 2681381121 (2.5G)
+wget -c http://dl.fbaipublicfiles.com/elq/elq_webqsp_large.bin
 
-if [[ ! -f elq_large_params.txt ]]; then
-    wget http://dl.fbaipublicfiles.com/elq/elq_large_params.txt
-fi
+# 长度： 1601 (1.6K)
+wget -c http://dl.fbaipublicfiles.com/elq/elq_large_params.txt
 
-if [[ ! -f entity.jsonl ]]; then
-    wget http://dl.fbaipublicfiles.com/elq/entity.jsonl
-fi
+# 长度： 3483640967 (3.2G)
+wget -c http://dl.fbaipublicfiles.com/elq/entity.jsonl
 
-if [[ ! -f entity_token_ids_128.t7 ]]; then
-    wget http://dl.fbaipublicfiles.com/elq/entity_token_ids_128.t7
-fi
+# 长度： 6045211994 (5.6G)
+wget -c http://dl.fbaipublicfiles.com/elq/entity_token_ids_128.t7
 
-if [[ ! -f all_entities_large.t7 ]]; then
-    wget http://dl.fbaipublicfiles.com/BLINK/all_entities_large.t7
-fi
+# wget -c http://dl.fbaipublicfiles.com/BLINK/all_entities_large.t7
 
-if [[ ! -f faiss_hnsw_index.pkl ]]; then
-    wget http://dl.fbaipublicfiles.com/elq/faiss_hnsw_index.pkl
-fi
+# 长度： 30320765098 (28G)
+wget -c http://dl.fbaipublicfiles.com/elq/faiss_hnsw_index.pkl
 
 cd "$ROOT_DIR"

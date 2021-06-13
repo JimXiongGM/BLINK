@@ -33,20 +33,22 @@ class BlinkParser(argparse.ArgumentParser):
     """
 
     def __init__(
-        self, add_blink_args=True, add_model_args=False, 
-        description='BLINK parser',
+        self,
+        add_blink_args=True,
+        add_model_args=False,
+        description="BLINK parser",
     ):
         super().__init__(
             description=description,
             allow_abbrev=False,
-            conflict_handler='resolve',
+            conflict_handler="resolve",
             formatter_class=argparse.HelpFormatter,
             add_help=add_blink_args,
         )
         self.blink_home = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
         )
-        os.environ['BLINK_HOME'] = self.blink_home
+        os.environ["BLINK_HOME"] = self.blink_home
 
         self.add_arg = self.add_argument
 
@@ -76,10 +78,11 @@ class BlinkParser(argparse.ArgumentParser):
             help="Whether to distributed the candidate generation process.",
         )
         parser.add_argument(
-            "--no_cuda", action="store_true", 
+            "--no_cuda",
+            action="store_true",
             help="Whether not to use CUDA when available",
         )
-        parser.add_argument("--top_k", default=10, type=int) 
+        parser.add_argument("--top_k", default=10, type=int)
         parser.add_argument(
             "--seed", type=int, default=52313, help="random seed for initialization"
         )
@@ -118,7 +121,7 @@ class BlinkParser(argparse.ArgumentParser):
             help="The maximum total label input sequence length after WordPiece tokenization. \n"
             "Sequences longer than this will be truncated, and sequences shorter \n"
             "than this will be padded.",
-        ) 
+        )
         parser.add_argument(
             "--path_to_model",
             default=None,
@@ -134,7 +137,10 @@ class BlinkParser(argparse.ArgumentParser):
             "bert-large-uncased, bert-base-cased, bert-base-multilingual, bert-base-chinese.",
         )
         parser.add_argument(
-            "--pull_from_layer", type=int, default=-1, help="Layers to pull from BERT",
+            "--pull_from_layer",
+            type=int,
+            default=-1,
+            help="Layers to pull from BERT",
         )
         parser.add_argument(
             "--lowercase",
@@ -143,7 +149,10 @@ class BlinkParser(argparse.ArgumentParser):
         )
         parser.add_argument("--context_key", default="context", type=str)
         parser.add_argument(
-            "--out_dim", type=int, default=1, help="Output dimention of bi-encoders.",
+            "--out_dim",
+            type=int,
+            default=1,
+            help="Output dimention of bi-encoders.",
         )
         parser.add_argument(
             "--add_linear",
@@ -164,7 +173,6 @@ class BlinkParser(argparse.ArgumentParser):
             help="The output directory where generated output file (model, etc.) is to be dumped.",
         )
 
-
     def add_training_args(self, args=None):
         """
         Add model training args.
@@ -180,8 +188,10 @@ class BlinkParser(argparse.ArgumentParser):
             help="The txt file where the the evaluation results will be written.",
         )
         parser.add_argument(
-            "--train_batch_size", default=8, type=int, 
-            help="Total batch size for training."
+            "--train_batch_size",
+            default=8,
+            type=int,
+            help="Total batch size for training.",
         )
         parser.add_argument("--max_grad_norm", default=1.0, type=float)
         parser.add_argument(
@@ -197,18 +207,19 @@ class BlinkParser(argparse.ArgumentParser):
             help="Number of training epochs.",
         )
         parser.add_argument(
-            "--print_interval", type=int, default=10, 
+            "--print_interval",
+            type=int,
+            default=10,
             help="Interval of loss printing",
         )
         parser.add_argument(
-           "--eval_interval",
+            "--eval_interval",
             type=int,
             default=100,
             help="Interval for evaluation during training",
         )
         parser.add_argument(
-            "--save_interval", type=int, default=1, 
-            help="Interval for model saving"
+            "--save_interval", type=int, default=1, help="Interval for model saving"
         )
         parser.add_argument(
             "--warmup_proportion",
@@ -230,7 +241,9 @@ class BlinkParser(argparse.ArgumentParser):
             help="Which type of layers to optimize in BERT",
         )
         parser.add_argument(
-            "--shuffle", type=bool, default=False, 
+            "--shuffle",
+            type=bool,
+            default=False,
             help="Whether to shuffle train data",
         )
 
@@ -240,7 +253,9 @@ class BlinkParser(argparse.ArgumentParser):
         """
         parser = self.add_argument_group("Model Evaluation Arguments")
         parser.add_argument(
-            "--eval_batch_size", default=8, type=int,
+            "--eval_batch_size",
+            default=8,
+            type=int,
             help="Total batch size for evaluation.",
         )
         parser.add_argument(
@@ -255,10 +270,7 @@ class BlinkParser(argparse.ArgumentParser):
             help="Whether to save prediction results.",
         )
         parser.add_argument(
-            "--encode_batch_size", 
-            default=8, 
-            type=int, 
-            help="Batch size for encoding."
+            "--encode_batch_size", default=8, type=int, help="Batch size for encoding."
         )
         parser.add_argument(
             "--cand_pool_path",

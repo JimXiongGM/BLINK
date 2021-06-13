@@ -122,4 +122,3 @@ class Evaluator:
                     break
 
         ax.plot(rankings, recall)
-

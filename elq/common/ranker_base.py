@@ -12,9 +12,14 @@ def get_model_obj(model):
     model = model.module if hasattr(model, "module") else model
     return model
 
+
 class BertEncoder(nn.Module):
     def __init__(
-        self, bert_model, output_dim, layer_pulled=-1, add_linear=None,
+        self,
+        bert_model,
+        output_dim,
+        layer_pulled=-1,
+        add_linear=None,
     ):
         super(BertEncoder, self).__init__()
         self.layer_pulled = layer_pulled
@@ -30,6 +35,7 @@ class BertEncoder(nn.Module):
     def forward(self, token_ids, segment_ids, attention_mask, DEBUG=False):
         if DEBUG:
             import pdb
+
             pdb.set_trace()
         try:
             output_bert, output_pooler, _ = self.bert_model(
@@ -41,6 +47,7 @@ class BertEncoder(nn.Module):
             print(attention_mask.size())
             print(e)
             import pdb
+
             pdb.set_trace()
             output_bert, output_pooler, _ = self.bert_model(
                 token_ids, segment_ids, attention_mask

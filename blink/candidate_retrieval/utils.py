@@ -305,4 +305,3 @@ def write_candidate_generation_results_to_file(
         write_candidate_generation_execution_time_to_file(
             results_dump_file_path, execution_time
         )
-

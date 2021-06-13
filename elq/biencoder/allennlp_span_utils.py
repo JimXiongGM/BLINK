@@ -32,7 +32,9 @@ def get_range_vector(size: int, device: int) -> torch.Tensor:
         return torch.arange(0, size, dtype=torch.long)
 
 
-def flatten_and_batch_shift_indices(indices: torch.Tensor, sequence_length: int) -> torch.Tensor:
+def flatten_and_batch_shift_indices(
+    indices: torch.Tensor, sequence_length: int
+) -> torch.Tensor:
     """
     This is a subroutine for [`batched_index_select`](./util.md#batched_index_select).
     The given `indices` of size `(batch_size, d_1, ..., d_n)` indexes into dimension 2 of a
@@ -62,7 +64,9 @@ def flatten_and_batch_shift_indices(indices: torch.Tensor, sequence_length: int)
         raise IndexError(
             f"All elements in indices should be in range (0, {sequence_length - 1})"
         )
-    offsets = get_range_vector(indices.size(0), get_device_of(indices)) * sequence_length
+    offsets = (
+        get_range_vector(indices.size(0), get_device_of(indices)) * sequence_length
+    )
     for _ in range(len(indices.size()) - 1):
         offsets = offsets.unsqueeze(1)
 
@@ -166,9 +170,9 @@ def batched_span_select(target: torch.Tensor, spans: torch.LongTensor) -> torch.
     max_batch_span_width = span_widths.max().item() + 1
 
     # Shape: (1, 1, max_batch_span_width)
-    max_span_range_indices = get_range_vector(max_batch_span_width, get_device_of(target)).view(
-        1, 1, -1
-    )
+    max_span_range_indices = get_range_vector(
+        max_batch_span_width, get_device_of(target)
+    ).view(1, 1, -1)
     # Shape: (batch_size, num_spans, max_batch_span_width)
     # This is a broadcasted comparison - for each span we are considering,
     # we are creating a range vector of size max_span_width, but masking values

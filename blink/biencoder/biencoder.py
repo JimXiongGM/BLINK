@@ -33,7 +33,7 @@ class BiEncoderModule(torch.nn.Module):
     def __init__(self, params):
         super(BiEncoderModule, self).__init__()
         ctxt_bert = BertModel.from_pretrained(params["bert_model"])
-        cand_bert = BertModel.from_pretrained(params['bert_model'])
+        cand_bert = BertModel.from_pretrained(params["bert_model"])
         self.context_encoder = BertEncoder(
             ctxt_bert,
             params["out_dim"],
@@ -109,7 +109,7 @@ class BiEncoderRanker(torch.nn.Module):
     def save_model(self, output_dir):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        model_to_save = get_model_obj(self.model) 
+        model_to_save = get_model_obj(self.model)
         output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
         output_config_file = os.path.join(output_dir, CONFIG_NAME)
         torch.save(model_to_save.state_dict(), output_model_file)
@@ -122,7 +122,7 @@ class BiEncoderRanker(torch.nn.Module):
             self.params["learning_rate"],
             fp16=self.params.get("fp16"),
         )
- 
+
     def encode_context(self, cands):
         token_idx_cands, segment_idx_cands, mask_cands = to_bert_input(
             cands, self.NULL_IDX
@@ -201,8 +201,8 @@ class BiEncoderRanker(torch.nn.Module):
 
 
 def to_bert_input(token_idx, null_idx):
-    """ token_idx is a 2D tensor int.
-        return token_idx, segment_idx and mask
+    """token_idx is a 2D tensor int.
+    return token_idx, segment_idx and mask
     """
     segment_idx = token_idx * 0
     mask = token_idx != null_idx

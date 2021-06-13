@@ -120,4 +120,3 @@ print("Not found:", len(not_matched_by_anything))
 
 print("Dumping", output_file_path)
 pickle.dump(wikipedia_data_filtered, open(output_file_path, "wb"), protocol=4)
-

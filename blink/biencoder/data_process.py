@@ -70,9 +70,9 @@ def get_context_representation(
 
 
 def get_candidate_representation(
-    candidate_desc, 
-    tokenizer, 
-    max_seq_length, 
+    candidate_desc,
+    tokenizer,
+    max_seq_length,
     candidate_title=None,
     title_tag=ENT_TITLE_TAG,
 ):
@@ -106,7 +106,7 @@ def process_mention_data(
     mention_key="mention",
     context_key="context",
     label_key="label",
-    title_key='label_title',
+    title_key="label_title",
     ent_start_token=ENT_START_TAG,
     ent_end_token=ENT_END_TAG,
     title_token=ENT_TITLE_TAG,
@@ -139,7 +139,10 @@ def process_mention_data(
         label = sample[label_key]
         title = sample.get(title_key, None)
         label_tokens = get_candidate_representation(
-            label, tokenizer, max_cand_length, title,
+            label,
+            tokenizer,
+            max_cand_length,
+            title,
         )
         label_idx = int(sample["label_id"])
 
@@ -174,17 +177,21 @@ def process_mention_data(
             logger.info("Label_id : %d" % sample["label_idx"][0])
 
     context_vecs = torch.tensor(
-        select_field(processed_samples, "context", "ids"), dtype=torch.long,
+        select_field(processed_samples, "context", "ids"),
+        dtype=torch.long,
     )
     cand_vecs = torch.tensor(
-        select_field(processed_samples, "label", "ids"), dtype=torch.long,
+        select_field(processed_samples, "label", "ids"),
+        dtype=torch.long,
     )
     if use_world:
         src_vecs = torch.tensor(
-            select_field(processed_samples, "src"), dtype=torch.long,
+            select_field(processed_samples, "src"),
+            dtype=torch.long,
         )
     label_idx = torch.tensor(
-        select_field(processed_samples, "label_idx"), dtype=torch.long,
+        select_field(processed_samples, "label_idx"),
+        dtype=torch.long,
     )
     data = {
         "context_vecs": context_vecs,

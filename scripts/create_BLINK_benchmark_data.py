@@ -28,8 +28,10 @@ def _get_pageid_from_api(title, client=None):
     pageid = None
 
     title_html = title.strip().replace(" ", "%20")
-    url = "https://en.wikipedia.org/w/api.php?action=query&titles={}&format=json".format(
-        title_html
+    url = (
+        "https://en.wikipedia.org/w/api.php?action=query&titles={}&format=json".format(
+            title_html
+        )
     )
 
     try:

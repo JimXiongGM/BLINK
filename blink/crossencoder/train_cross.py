@@ -60,7 +60,9 @@ def modify(context_input, candidate_input, max_seq_length):
     return torch.LongTensor(new_input)
 
 
-def evaluate(reranker, eval_dataloader, device, logger, context_length, zeshel=False, silent=True):
+def evaluate(
+    reranker, eval_dataloader, device, logger, context_length, zeshel=False, silent=True
+):
     reranker.model.eval()
     if silent:
         iter_ = eval_dataloader
@@ -113,7 +115,7 @@ def evaluate(reranker, eval_dataloader, device, logger, context_length, zeshel=F
         normalized_eval_accuracy = eval_accuracy / nb_eval_examples
     if zeshel:
         macro = 0.0
-        num = 0.0 
+        num = 0.0
         for i in range(len(WORLDS)):
             if acc[i] > 0:
                 acc[i] /= tot[i]
@@ -149,7 +151,9 @@ def get_scheduler(params, optimizer, len_train_data, logger):
     num_warmup_steps = int(num_train_steps * params["warmup_proportion"])
 
     scheduler = WarmupLinearSchedule(
-        optimizer, warmup_steps=num_warmup_steps, t_total=num_train_steps,
+        optimizer,
+        warmup_steps=num_warmup_steps,
+        t_total=num_train_steps,
     )
     logger.info(" Num optimization steps = %d" % num_train_steps)
     logger.info(" Num warmup steps = %d", num_warmup_steps)
@@ -198,7 +202,7 @@ def main(params):
 
     max_seq_length = params["max_seq_length"]
     context_length = params["max_context_length"]
-    
+
     fname = os.path.join(params["data_path"], "train.t7")
     train_data = torch.load(fname)
     context_input = train_data["context_vecs"]
@@ -212,16 +216,14 @@ def main(params):
 
     context_input = modify(context_input, candidate_input, max_seq_length)
     if params["zeshel"]:
-        src_input = train_data['worlds'][:len(context_input)]
+        src_input = train_data["worlds"][: len(context_input)]
         train_tensor_data = TensorDataset(context_input, label_input, src_input)
     else:
         train_tensor_data = TensorDataset(context_input, label_input)
     train_sampler = RandomSampler(train_tensor_data)
 
     train_dataloader = DataLoader(
-        train_tensor_data, 
-        sampler=train_sampler, 
-        batch_size=params["train_batch_size"]
+        train_tensor_data, sampler=train_sampler, batch_size=params["train_batch_size"]
     )
 
     fname = os.path.join(params["data_path"], "valid.t7")
@@ -237,16 +239,14 @@ def main(params):
 
     context_input = modify(context_input, candidate_input, max_seq_length)
     if params["zeshel"]:
-        src_input = valid_data["worlds"][:len(context_input)]
+        src_input = valid_data["worlds"][: len(context_input)]
         valid_tensor_data = TensorDataset(context_input, label_input, src_input)
     else:
         valid_tensor_data = TensorDataset(context_input, label_input)
     valid_sampler = SequentialSampler(valid_tensor_data)
 
     valid_dataloader = DataLoader(
-        valid_tensor_data, 
-        sampler=valid_sampler, 
-        batch_size=params["eval_batch_size"]
+        valid_tensor_data, sampler=valid_sampler, batch_size=params["eval_batch_size"]
     )
 
     # evaluate before training
@@ -295,7 +295,7 @@ def main(params):
         part = 0
         for step, batch in enumerate(iter_):
             batch = tuple(t.to(device) for t in batch)
-            context_input = batch[0] 
+            context_input = batch[0]
             label_input = batch[1]
             loss, _ = reranker(context_input, label_input, context_length)
 

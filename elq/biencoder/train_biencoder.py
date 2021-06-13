@@ -40,15 +40,25 @@ from elq.biencoder.data_process import process_mention_data
 from blink.biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
 from blink.common.optimizer import get_bert_optimizer
 from elq.common.params import ElqParser
-from elq.index.faiss_indexer import DenseFlatIndexer, DenseHNSWFlatIndexer, DenseIVFFlatIndexer
+from elq.index.faiss_indexer import (
+    DenseFlatIndexer,
+    DenseHNSWFlatIndexer,
+    DenseIVFFlatIndexer,
+)
 
 
 logger = None
 np.random.seed(1234)  # reproducible for FAISS indexer
 
+
 def evaluate(
-    reranker, eval_dataloader, params, device, logger,
-    cand_encs=None, faiss_index=None,
+    reranker,
+    eval_dataloader,
+    params,
+    device,
+    logger,
+    cand_encs=None,
+    faiss_index=None,
     get_losses=False,
 ):
     reranker.model.eval()
@@ -72,7 +82,7 @@ def evaluate(
 
     for step, batch in enumerate(iter_):
         batch = tuple(t.to(device) for t in batch)
-        context_input = batch[0]	
+        context_input = batch[0]
         candidate_input = batch[1]
         # (bs, num_actual_spans)
         label_ids = batch[2].cpu().numpy() if params["freeze_cand_enc"] else None
@@ -80,7 +90,7 @@ def evaluate(
             label_ids[label_ids > 199] = 199
         mention_idx = batch[-2].cpu().numpy()
         mention_idx_mask = batch[-1].cpu().numpy()
-        
+
         with torch.no_grad():
             # evaluate with joint mention detection
             if params["freeze_cand_enc"]:
@@ -89,18 +99,29 @@ def evaluate(
                     num_cand_mentions=50,
                     topK_threshold=-3.5,
                 )
-                embedding_context = context_outs['mention_reps'].cpu().numpy()
-                pred_mention_mask = context_outs['mention_masks'].cpu().numpy()
-                chosen_mention_bounds = context_outs['mention_bounds'].cpu().numpy()
+                embedding_context = context_outs["mention_reps"].cpu().numpy()
+                pred_mention_mask = context_outs["mention_masks"].cpu().numpy()
+                chosen_mention_bounds = context_outs["mention_bounds"].cpu().numpy()
                 embedding_ctxt = embedding_context[pred_mention_mask]
                 # do faiss search for closest entity
                 # DIM (all_pred_mentions_batch, num_cand_entities); (all_pred_mentions_batch, num_cand_entities)
-                top_cand_logits_shape, top_cand_indices_shape = faiss_index.search_knn(embedding_ctxt, 10)
-                top_cand_logits = np.zeros((pred_mention_mask.shape[0], pred_mention_mask.shape[1], 10), dtype=np.float)
+                top_cand_logits_shape, top_cand_indices_shape = faiss_index.search_knn(
+                    embedding_ctxt, 10
+                )
+                top_cand_logits = np.zeros(
+                    (pred_mention_mask.shape[0], pred_mention_mask.shape[1], 10),
+                    dtype=np.float,
+                )
                 top_cand_indices = np.zeros_like(pred_mention_mask, dtype=np.int)
                 top_cand_logits[pred_mention_mask] = top_cand_logits_shape
-                top_cand_indices[pred_mention_mask] = top_cand_indices_shape[:,0]
-                scores = (np.log(softmax(top_cand_logits, -1)) + torch.sigmoid(context_outs['mention_logits'].unsqueeze(-1)).log().cpu().numpy())[:,:,0]
+                top_cand_indices[pred_mention_mask] = top_cand_indices_shape[:, 0]
+                scores = (
+                    np.log(softmax(top_cand_logits, -1))
+                    + torch.sigmoid(context_outs["mention_logits"].unsqueeze(-1))
+                    .log()
+                    .cpu()
+                    .numpy()
+                )[:, :, 0]
                 tmp_num_correct = 0.0
                 tmp_num_p = 0.0
                 tmp_num_g = 0.0
@@ -108,18 +129,29 @@ def evaluate(
                     gold_mb = mention_idx[i][mention_idx_mask[i]]
                     gold_label_ids = label_ids[i][mention_idx_mask[i]]
                     overall_score_mask = scores[i][pred_mention_mask[i]] > -2.5
-                    pred_mb = chosen_mention_bounds[i][pred_mention_mask[i]][overall_score_mask]
+                    pred_mb = chosen_mention_bounds[i][pred_mention_mask[i]][
+                        overall_score_mask
+                    ]
                     pred_label_ids = ex[pred_mention_mask[i]][overall_score_mask]
-                    gold_triples = [(str(gold_label_ids[j]), gold_mb[j][0], gold_mb[j][1]) for j in range(len(gold_mb))]
-                    pred_triples = [(str(pred_label_ids[j]), pred_mb[j][0], pred_mb[j][1]) for j in range(len(pred_mb))]
-                    num_overlap_weak, _ = entity_linking_tp_with_overlap(gold_triples, pred_triples)
+                    gold_triples = [
+                        (str(gold_label_ids[j]), gold_mb[j][0], gold_mb[j][1])
+                        for j in range(len(gold_mb))
+                    ]
+                    pred_triples = [
+                        (str(pred_label_ids[j]), pred_mb[j][0], pred_mb[j][1])
+                        for j in range(len(pred_mb))
+                    ]
+                    num_overlap_weak, _ = entity_linking_tp_with_overlap(
+                        gold_triples, pred_triples
+                    )
                     tmp_num_correct += num_overlap_weak
                     tmp_num_p += float(len(pred_triples))
                     tmp_num_g += float(len(gold_triples))
                 text_encs = embedding_context
             else:
                 loss, logits, mention_logits, mention_bounds = reranker(
-                    context_input, candidate_input,
+                    context_input,
+                    candidate_input,
                     cand_encs=cand_encs,
                     gold_mention_bounds=batch[-2],
                     gold_mention_bounds_mask=batch[-1],
@@ -161,7 +193,12 @@ def evaluate(
     if normalized_eval_p + normalized_eval_r == 0:
         f1 = 0
     else:
-        f1 = 2 * normalized_eval_p * normalized_eval_r / (normalized_eval_p + normalized_eval_r)
+        f1 = (
+            2
+            * normalized_eval_p
+            * normalized_eval_r
+            / (normalized_eval_p + normalized_eval_r)
+        )
     logger.info("F1: %.5f" % f1)
     results["normalized_f1"] = f1
     return results
@@ -185,7 +222,9 @@ def get_scheduler(params, optimizer, len_train_data, logger):
     num_warmup_steps = int(num_train_steps * params["warmup_proportion"])
 
     scheduler = WarmupLinearSchedule(
-        optimizer, warmup_steps=num_warmup_steps, t_total=num_train_steps,
+        optimizer,
+        warmup_steps=num_warmup_steps,
+        t_total=num_train_steps,
     )
     logger.info(" Num optimization steps = %d" % num_train_steps)
     logger.info(" Num warmup steps = %d", num_warmup_steps)
@@ -243,8 +282,12 @@ def main(params):
     if len(valid_samples) > 1024:
         valid_subset = 1024
     else:
-        valid_subset = len(valid_samples) - len(valid_samples) % torch.cuda.device_count()
-    logger.info("Read %d valid samples, choosing %d subset" % (len(valid_samples), valid_subset))
+        valid_subset = (
+            len(valid_samples) - len(valid_samples) % torch.cuda.device_count()
+        )
+    logger.info(
+        "Read %d valid samples, choosing %d subset" % (len(valid_samples), valid_subset)
+    )
 
     valid_data, valid_tensor_data, extra_ret_values = process_mention_data(
         samples=valid_samples[:valid_subset],  # use subset of valid data
@@ -271,22 +314,26 @@ def main(params):
     cand_encs = None
     cand_encs_index = None
     if params["freeze_cand_enc"]:
-        cand_encs = torch.load(params['cand_enc_path'])
+        cand_encs = torch.load(params["cand_enc_path"])
         logger.info("Loaded saved entity encodings")
         if params["debug"]:
             cand_encs = cand_encs[:200]
-        
+
         # build FAISS index
         cand_encs_index = DenseHNSWFlatIndexer(1)
-        cand_encs_index.deserialize_from(params['index_path'])
+        cand_encs_index.deserialize_from(params["index_path"])
         logger.info("Loaded FAISS index on entity encodings")
         num_neighbors = 10
 
     # evaluate before training
     results = evaluate(
-        reranker, valid_dataloader, params,
-        cand_encs=cand_encs, device=device,
-        logger=logger, faiss_index=cand_encs_index,
+        reranker,
+        valid_dataloader,
+        params,
+        cand_encs=cand_encs,
+        device=device,
+        logger=logger,
+        faiss_index=cand_encs_index,
     )
 
     number_of_samples_per_dataset = {}
@@ -324,13 +371,9 @@ def main(params):
     else:
         num_samples_per_batch = len(train_samples) // num_train_epochs
 
-
     trainer_path = params.get("path_to_trainer_state", None)
     optimizer = get_optimizer(model, params)
-    scheduler = get_scheduler(
-        params, optimizer, num_samples_per_batch,
-        logger
-    )
+    scheduler = get_scheduler(params, optimizer, num_samples_per_batch, logger)
     if trainer_path is not None and os.path.exists(trainer_path):
         training_state = torch.load(trainer_path)
         optimizer.load_state_dict(training_state["optimizer"])
@@ -342,7 +385,9 @@ def main(params):
     best_epoch_idx = -1
     best_score = -1
     logger.info("Num samples per batch : %d" % num_samples_per_batch)
-    for epoch_idx in trange(params["last_epoch"] + 1, int(num_train_epochs), desc="Epoch"):
+    for epoch_idx in trange(
+        params["last_epoch"] + 1, int(num_train_epochs), desc="Epoch"
+    ):
         tr_loss = 0
         results = None
 
@@ -350,7 +395,11 @@ def main(params):
             start_idx = epoch_idx * num_samples_per_batch
             end_idx = (epoch_idx + 1) * num_samples_per_batch
 
-            train_data, train_tensor_data_tuple, extra_ret_values = process_mention_data(
+            (
+                train_data,
+                train_tensor_data_tuple,
+                extra_ret_values,
+            ) = process_mention_data(
                 samples=train_samples[start_idx:end_idx],
                 tokenizer=tokenizer,
                 max_context_length=params["max_context_length"],
@@ -364,11 +413,13 @@ def main(params):
                 candidate_token_ids=candidate_token_ids,
                 params=params,
             )
-            logger.info("Finished preparing training data for epoch {}: {} samples".format(epoch_idx, len(train_tensor_data_tuple[0])))
-    
-        batch_train_tensor_data = TensorDataset(
-            *list(train_tensor_data_tuple)
-        )
+            logger.info(
+                "Finished preparing training data for epoch {}: {} samples".format(
+                    epoch_idx, len(train_tensor_data_tuple[0])
+                )
+            )
+
+        batch_train_tensor_data = TensorDataset(*list(train_tensor_data_tuple))
         if params["shuffle"]:
             train_sampler = RandomSampler(batch_train_tensor_data)
         else:
@@ -385,7 +436,7 @@ def main(params):
 
         for step, batch in enumerate(iter_):
             batch = tuple(t.to(device) for t in batch)
-            context_input = batch[0]	
+            context_input = batch[0]
             candidate_input = batch[1]
             label_ids = batch[2] if params["freeze_cand_enc"] else None
             mention_idxs = batch[-2]
@@ -400,53 +451,76 @@ def main(params):
             mention_bounds = None
             hard_negs_mask = None
             if params["adversarial_training"]:
-                assert cand_encs is not None and label_ids is not None  # due to params["freeze_cand_enc"] being set
-                '''
+                assert (
+                    cand_encs is not None and label_ids is not None
+                )  # due to params["freeze_cand_enc"] being set
+                """
                 GET CLOSEST N CANDIDATES (AND APPROPRIATE LABELS)
-                '''
+                """
                 # (bs, num_spans, embed_size)
                 pos_cand_encs_input = cand_encs[label_ids.to("cpu")]
                 pos_cand_encs_input[~mention_idx_mask] = 0
 
                 context_outs = reranker.encode_context(
-                    context_input, gold_mention_bounds=mention_idxs,
+                    context_input,
+                    gold_mention_bounds=mention_idxs,
                     gold_mention_bounds_mask=mention_idx_mask,
                     get_mention_scores=True,
                 )
-                mention_logits = context_outs['all_mention_logits']
-                mention_bounds = context_outs['all_mention_bounds']
-                mention_reps = context_outs['mention_reps']
+                mention_logits = context_outs["all_mention_logits"]
+                mention_bounds = context_outs["all_mention_bounds"]
+                mention_reps = context_outs["mention_reps"]
                 # mention_reps: (bs, max_num_spans, embed_size) -> masked_mention_reps: (all_pred_mentions_batch, embed_size)
-                masked_mention_reps = mention_reps[context_outs['mention_masks']]
+                masked_mention_reps = mention_reps[context_outs["mention_masks"]]
 
                 # neg_cand_encs_input_idxs: (all_pred_mentions_batch, num_negatives)
-                _, neg_cand_encs_input_idxs = cand_encs_index.search_knn(masked_mention_reps.detach().cpu().numpy(), num_neighbors)
+                _, neg_cand_encs_input_idxs = cand_encs_index.search_knn(
+                    masked_mention_reps.detach().cpu().numpy(), num_neighbors
+                )
                 neg_cand_encs_input_idxs = torch.from_numpy(neg_cand_encs_input_idxs)
                 # set "correct" closest entities to -1
                 # masked_label_ids: (all_pred_mentions_batch)
                 masked_label_ids = label_ids[mention_idx_mask]
                 # neg_cand_encs_input_idxs: (max_spans_in_batch, num_negatives)
-                neg_cand_encs_input_idxs[neg_cand_encs_input_idxs - masked_label_ids.to("cpu").unsqueeze(-1) == 0] = -1
+                neg_cand_encs_input_idxs[
+                    neg_cand_encs_input_idxs - masked_label_ids.to("cpu").unsqueeze(-1)
+                    == 0
+                ] = -1
 
                 # reshape back tensor (extract num_spans dimension)
                 # (bs, num_spans, num_negatives)
-                neg_cand_encs_input_idxs_reconstruct = torch.zeros(label_ids.size(0), label_ids.size(1), neg_cand_encs_input_idxs.size(-1), dtype=neg_cand_encs_input_idxs.dtype)
-                neg_cand_encs_input_idxs_reconstruct[mention_idx_mask] = neg_cand_encs_input_idxs
+                neg_cand_encs_input_idxs_reconstruct = torch.zeros(
+                    label_ids.size(0),
+                    label_ids.size(1),
+                    neg_cand_encs_input_idxs.size(-1),
+                    dtype=neg_cand_encs_input_idxs.dtype,
+                )
+                neg_cand_encs_input_idxs_reconstruct[
+                    mention_idx_mask
+                ] = neg_cand_encs_input_idxs
                 neg_cand_encs_input_idxs = neg_cand_encs_input_idxs_reconstruct
 
                 # create neg_example_idx (corresponding example (in batch) for each negative)
                 # neg_example_idx: (bs * num_negatives)
-                neg_example_idx = torch.arange(neg_cand_encs_input_idxs.size(0)).unsqueeze(-1)
-                neg_example_idx = neg_example_idx.expand(neg_cand_encs_input_idxs.size(0), neg_cand_encs_input_idxs.size(2))
+                neg_example_idx = torch.arange(
+                    neg_cand_encs_input_idxs.size(0)
+                ).unsqueeze(-1)
+                neg_example_idx = neg_example_idx.expand(
+                    neg_cand_encs_input_idxs.size(0), neg_cand_encs_input_idxs.size(2)
+                )
                 neg_example_idx = neg_example_idx.flatten()
 
                 # flatten and filter -1 (i.e. any correct/positive entities)
                 # neg_cand_encs_input_idxs: (bs * num_negatives, num_spans)
-                neg_cand_encs_input_idxs = neg_cand_encs_input_idxs.permute(0,2,1)
-                neg_cand_encs_input_idxs = neg_cand_encs_input_idxs.reshape(-1, neg_cand_encs_input_idxs.size(-1))
+                neg_cand_encs_input_idxs = neg_cand_encs_input_idxs.permute(0, 2, 1)
+                neg_cand_encs_input_idxs = neg_cand_encs_input_idxs.reshape(
+                    -1, neg_cand_encs_input_idxs.size(-1)
+                )
                 # mask invalid negatives (actually the positive example)
                 # (bs * num_negatives)
-                mask = ~((neg_cand_encs_input_idxs == -1).sum(1).bool())  # rows without any -1 entry
+                mask = ~(
+                    (neg_cand_encs_input_idxs == -1).sum(1).bool()
+                )  # rows without any -1 entry
                 # deletes corresponding negative for *all* spans in that example (deletes at most 3 of 10 negatives / example)
                 # neg_cand_encs_input_idxs: (bs * num_negatives - invalid_negs, num_spans)
                 neg_cand_encs_input_idxs = neg_cand_encs_input_idxs[mask]
@@ -460,27 +534,47 @@ def main(params):
 
                 # create input tensors (concat [pos examples, neg examples])
                 # (bs + bs * num_negatives, num_spans, embed_size)
-                mention_reps_input = torch.cat([
-                    mention_reps, mention_reps[neg_example_idx.to(device)],
-                ])
+                mention_reps_input = torch.cat(
+                    [
+                        mention_reps,
+                        mention_reps[neg_example_idx.to(device)],
+                    ]
+                )
                 assert mention_reps.size(0) == pos_cand_encs_input.size(0)
 
                 # (bs + bs * num_negatives, num_spans)
-                label_input = torch.cat([
-                    torch.ones(pos_cand_encs_input.size(0), pos_cand_encs_input.size(1), dtype=label_ids.dtype),
-                    torch.zeros(neg_cand_encs_input.size(0), neg_cand_encs_input.size(1), dtype=label_ids.dtype),
-                ]).to(device)
+                label_input = torch.cat(
+                    [
+                        torch.ones(
+                            pos_cand_encs_input.size(0),
+                            pos_cand_encs_input.size(1),
+                            dtype=label_ids.dtype,
+                        ),
+                        torch.zeros(
+                            neg_cand_encs_input.size(0),
+                            neg_cand_encs_input.size(1),
+                            dtype=label_ids.dtype,
+                        ),
+                    ]
+                ).to(device)
                 # (bs + bs * num_negatives, num_spans, embed_size)
-                cand_encs_input = torch.cat([
-                    pos_cand_encs_input, neg_cand_encs_input,
-                ]).to(device)
+                cand_encs_input = torch.cat(
+                    [
+                        pos_cand_encs_input,
+                        neg_cand_encs_input,
+                    ]
+                ).to(device)
                 hard_negs_mask = torch.cat([mention_idx_mask, neg_mention_idx_mask])
 
             loss, _, _, _ = reranker(
-                context_input, candidate_input,
-                cand_encs=cand_encs_input, text_encs=mention_reps_input,
-                mention_logits=mention_logits, mention_bounds=mention_bounds,
-                label_input=label_input, gold_mention_bounds=mention_idxs,
+                context_input,
+                candidate_input,
+                cand_encs=cand_encs_input,
+                text_encs=mention_reps_input,
+                mention_logits=mention_logits,
+                mention_bounds=mention_bounds,
+                label_input=label_input,
+                gold_mention_bounds=mention_idxs,
                 gold_mention_bounds_mask=mention_idx_mask,
                 hard_negs_mask=hard_negs_mask,
                 return_loss=True,
@@ -520,9 +614,13 @@ def main(params):
                 cand_encs_input = None
 
                 evaluate(
-                    reranker, valid_dataloader, params,
-                    cand_encs=cand_encs, device=device,
-                    logger=logger, faiss_index=cand_encs_index,
+                    reranker,
+                    valid_dataloader,
+                    params,
+                    cand_encs=cand_encs,
+                    device=device,
+                    logger=logger,
+                    faiss_index=cand_encs_index,
                     get_losses=params["get_losses"],
                 )
                 model.train()
@@ -533,24 +631,35 @@ def main(params):
             model_output_path, "epoch_{}".format(epoch_idx)
         )
         utils.save_model(model, tokenizer, epoch_output_folder_path)
-        torch.save({
-            "optimizer": optimizer.state_dict(),
-            "scheduler": scheduler.state_dict(),
-        }, os.path.join(epoch_output_folder_path, "training_state.th"))
+        torch.save(
+            {
+                "optimizer": optimizer.state_dict(),
+                "scheduler": scheduler.state_dict(),
+            },
+            os.path.join(epoch_output_folder_path, "training_state.th"),
+        )
 
         output_eval_file = os.path.join(epoch_output_folder_path, "eval_results.txt")
         logger.info("Valid data evaluation")
         results = evaluate(
-            reranker, valid_dataloader, params,
-            cand_encs=cand_encs, device=device,
-            logger=logger, faiss_index=cand_encs_index,
+            reranker,
+            valid_dataloader,
+            params,
+            cand_encs=cand_encs,
+            device=device,
+            logger=logger,
+            faiss_index=cand_encs_index,
             get_losses=params["get_losses"],
         )
         logger.info("Train data evaluation")
         results = evaluate(
-            reranker, train_dataloader, params,
-            cand_encs=cand_encs, device=device,
-            logger=logger, faiss_index=cand_encs_index,
+            reranker,
+            train_dataloader,
+            params,
+            cand_encs=cand_encs,
+            device=device,
+            logger=logger,
+            faiss_index=cand_encs_index,
             get_losses=params["get_losses"],
         )
 
@@ -577,7 +686,9 @@ def main(params):
 
     if params["evaluate"]:
         params["path_to_model"] = model_output_path
-        evaluate(params, cand_encs=cand_encs, logger=logger, faiss_index=cand_encs_index)
+        evaluate(
+            params, cand_encs=cand_encs, logger=logger, faiss_index=cand_encs_index
+        )
 
 
 if __name__ == "__main__":

@@ -74,7 +74,9 @@ class DenseIVFFlatIndexer(DenseIndexer):
         self.nprobe = nprobe
         self.nlist = nlist
         quantizer = faiss.IndexFlatL2(vector_sz)  # the other index
-        self.index = faiss.IndexIVFFlat(quantizer, vector_sz, self.nlist, faiss.METRIC_INNER_PRODUCT)
+        self.index = faiss.IndexIVFFlat(
+            quantizer, vector_sz, self.nlist, faiss.METRIC_INNER_PRODUCT
+        )
         self.index.nprobe = nprobe
 
     def index_data(self, data: np.array):
@@ -93,7 +95,7 @@ class DenseIVFFlatIndexer(DenseIndexer):
 # DenseHNSWFlatIndexer does approximate search
 class DenseHNSWFlatIndexer(DenseIndexer):
     """
-     Efficient index for retrieval. Note: default settings are for hugh accuracy but also high RAM usage
+    Efficient index for retrieval. Note: default settings are for hugh accuracy but also high RAM usage
     """
 
     def __init__(

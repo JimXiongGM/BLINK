@@ -9,31 +9,42 @@ from datetime import timedelta
 
 
 WORLDS = {
-    'american_football',
-    'doctor_who',
-    'fallout',
-    'final_fantasy',
-    'military',
-    'pro_wrestling',
-    'starwars',
-    'world_of_warcraft',
-    'coronation_street',
-    'muppets',
-    'ice_hockey',
-    'elder_scrolls',
-    'forgotten_realms',
-    'lego',
-    'star_trek',
-    'yugioh'
+    "american_football",
+    "doctor_who",
+    "fallout",
+    "final_fantasy",
+    "military",
+    "pro_wrestling",
+    "starwars",
+    "world_of_warcraft",
+    "coronation_street",
+    "muppets",
+    "ice_hockey",
+    "elder_scrolls",
+    "forgotten_realms",
+    "lego",
+    "star_trek",
+    "yugioh",
 }
 
 domain_set = {}
-domain_set['val'] = set(['coronation_street', 'muppets', 'ice_hockey', 'elder_scrolls'])
-domain_set['test'] = set(['forgotten_realms', 'lego', 'star_trek', 'yugioh'])
-domain_set['train'] = set(['american_football', 'doctor_who', 'fallout', 'final_fantasy', 'military', 'pro_wrestling', 'starwars', 'world_of_warcraft'])
+domain_set["val"] = set(["coronation_street", "muppets", "ice_hockey", "elder_scrolls"])
+domain_set["test"] = set(["forgotten_realms", "lego", "star_trek", "yugioh"])
+domain_set["train"] = set(
+    [
+        "american_football",
+        "doctor_who",
+        "fallout",
+        "final_fantasy",
+        "military",
+        "pro_wrestling",
+        "starwars",
+        "world_of_warcraft",
+    ]
+)
 
-class LogFormatter():
 
+class LogFormatter:
     def __init__(self):
         self.start_time = time.time()
 
@@ -43,11 +54,11 @@ class LogFormatter():
         prefix = "%s - %s - %s" % (
             record.levelname,
             time.strftime("%x %X"),
-            timedelta(seconds=elapsed_seconds)
+            timedelta(seconds=elapsed_seconds),
         )
         message = record.getMessage()
-        message = message.replace('\n', '\n' + ' ' * (len(prefix) + 3))
-        return "%s - %s" % (prefix, message) if message else ''
+        message = message.replace("\n", "\n" + " " * (len(prefix) + 3))
+        return "%s - %s" % (prefix, message) if message else ""
 
 
 log_formatter = LogFormatter()
@@ -71,7 +82,7 @@ def load_entity_dict(params):
         cur_dict = {}
         doc_map = {}
         doc_list = []
-        with open(fname, 'rt') as f:
+        with open(fname, "rt") as f:
             for line in f:
                 line = line.rstrip()
                 item = json.loads(line)
@@ -94,10 +105,10 @@ def convert_data(params, entity_dict, entity_map, mode):
     else:
         fname = os.path.join(params.mention_path, mode + ".json")
 
-    fout = open(os.path.join(params.output_path, mode + ".jsonl"), 'wt')
+    fout = open(os.path.join(params.output_path, mode + ".jsonl"), "wt")
     cnt = 0
     max_tok = 128
-    with open(fname, 'rt') as f:
+    with open(fname, "rt") as f:
         for line in f:
             cnt += 1
             line = line.rstrip()
@@ -114,52 +125,54 @@ def convert_data(params, entity_dict, entity_map, mode):
             text = entity_dict[src][orig_id]["text"].lower()
             tokens = text.split(" ")
 
-            assert mention == ' '.join(tokens[start:end + 1]) 
+            assert mention == " ".join(tokens[start : end + 1])
             tokenized_query = mention
 
-            mention_context_left = tokens[max(0, start - max_tok):start]
-            mention_context_right = tokens[end + 1:min(len(tokens), end + max_tok + 1)]
+            mention_context_left = tokens[max(0, start - max_tok) : start]
+            mention_context_right = tokens[
+                end + 1 : min(len(tokens), end + max_tok + 1)
+            ]
 
             # entity info
             k = entity_map[src][label_doc_id]
-            ent_title = entity_dict[src][k]['title']
+            ent_title = entity_dict[src][k]["title"]
             ent_text = entity_dict[src][k]["text"]
 
             example = {}
-            example["context_left"] = ' '.join(mention_context_left)
-            example['context_right'] = ' '.join(mention_context_right)
+            example["context_left"] = " ".join(mention_context_left)
+            example["context_right"] = " ".join(mention_context_right)
             example["mention"] = mention
             example["label"] = ent_text
             example["label_id"] = k
-            example['label_title'] = ent_title
-            example['world'] = src
+            example["label_title"] = ent_title
+            example["world"] = src
             fout.write(json.dumps(example))
-            fout.write('\n')
+            fout.write("\n")
 
     fout.close()
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Zero-shot Entity Linking Dataset')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Zero-shot Entity Linking Dataset")
     parser.add_argument(
-        '--document_path', 
-        default='data/zeshel/documents',
+        "--document_path",
+        default="data/zeshel/documents",
         type=str,
     )
     parser.add_argument(
-        '--mention_path', 
-        default='data/zeshel/mentions',
+        "--mention_path",
+        default="data/zeshel/mentions",
         type=str,
     )
     parser.add_argument(
-        '--output_path',
-        default='data/zeshel/blink_format',
+        "--output_path",
+        default="data/zeshel/blink_format",
         type=str,
     )
     params = parser.parse_args()
     os.makedirs(params.output_path, exist_ok=True)
 
     entity_dict, entity_map = load_entity_dict(params)
-    convert_data(params, entity_dict, entity_map, 'train')
-    convert_data(params, entity_dict, entity_map, 'valid')
-    convert_data(params, entity_dict, entity_map, 'test')
+    convert_data(params, entity_dict, entity_map, "train")
+    convert_data(params, entity_dict, entity_map, "valid")
+    convert_data(params, entity_dict, entity_map, "test")

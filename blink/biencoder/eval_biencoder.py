@@ -33,10 +33,10 @@ def load_entity_dict(logger, params, is_zeshel):
 
     entity_list = []
     logger.info("Loading entity description from path: " + path)
-    with open(path, 'rt') as f:
+    with open(path, "rt") as f:
         for line in f:
             sample = json.loads(line.rstrip())
-            title = sample['title']
+            title = sample["title"]
             text = sample.get("text", "").strip()
             entity_list.append((title, text))
             if params["debug"] and len(entity_list) > 200:
@@ -98,7 +98,7 @@ def get_candidate_pool_tensor(
 ):
     # TODO: add multiple thread process
     logger.info("Convert candidate text to id")
-    cand_pool = [] 
+    cand_pool = []
     for entity_desc in tqdm(entity_desc_list):
         if type(entity_desc) is tuple:
             title, entity_text = entity_desc
@@ -107,14 +107,14 @@ def get_candidate_pool_tensor(
             entity_text = entity_desc
 
         rep = data.get_candidate_representation(
-                entity_text, 
-                tokenizer, 
-                max_seq_length,
-                title,
+            entity_text,
+            tokenizer,
+            max_seq_length,
+            title,
         )
         cand_pool.append(rep["ids"])
 
-    cand_pool = torch.LongTensor(cand_pool) 
+    cand_pool = torch.LongTensor(cand_pool)
     return cand_pool
 
 
@@ -141,7 +141,7 @@ def encode_candidate(
             )
             cand_encode_dict[src] = cand_pool_encode
         return cand_encode_dict
-        
+
     reranker.model.eval()
     device = reranker.device
     sampler = SequentialSampler(candidate_pool)
@@ -207,16 +207,16 @@ def main(params):
         os.makedirs(output_path)
     logger = utils.get_logger(params["output_path"])
 
-    # Init model 
+    # Init model
     reranker = BiEncoderRanker(params)
     tokenizer = reranker.tokenizer
     model = reranker.model
-    
+
     device = reranker.device
-    
+
     cand_encode_path = params.get("cand_encode_path", None)
-    
-    # candidate encoding is not pre-computed. 
+
+    # candidate encoding is not pre-computed.
     # load/generate candidate pool to compute candidate encoding.
     cand_pool_path = params.get("cand_pool_path", None)
     candidate_pool = load_or_generate_candidate_pool(
@@ -224,7 +224,7 @@ def main(params):
         params,
         logger,
         cand_pool_path,
-    )       
+    )
 
     candidate_encoding = None
     if cand_encode_path is not None:
@@ -243,8 +243,7 @@ def main(params):
             params["encode_batch_size"],
             silent=params["silent"],
             logger=logger,
-            is_zeshel=params.get("zeshel", None)
-            
+            is_zeshel=params.get("zeshel", None),
         )
 
         if cand_encode_path is not None:
@@ -252,27 +251,24 @@ def main(params):
             logger.info("Saving candidate encoding to file " + cand_encode_path)
             torch.save(candidate_encoding, cand_encode_path)
 
-
     test_samples = utils.read_dataset(params["mode"], params["data_path"])
     logger.info("Read %d test samples." % len(test_samples))
-   
+
     test_data, test_tensor_data = data.process_mention_data(
         test_samples,
         tokenizer,
         params["max_context_length"],
         params["max_cand_length"],
-        context_key=params['context_key'],
+        context_key=params["context_key"],
         silent=params["silent"],
         logger=logger,
         debug=params["debug"],
     )
     test_sampler = SequentialSampler(test_tensor_data)
     test_dataloader = DataLoader(
-        test_tensor_data, 
-        sampler=test_sampler, 
-        batch_size=params["eval_batch_size"]
+        test_tensor_data, sampler=test_sampler, batch_size=params["eval_batch_size"]
     )
-    
+
     save_results = params.get("save_topk_result")
     new_data = nnquery.get_topk_predictions(
         reranker,
@@ -286,14 +282,14 @@ def main(params):
         save_results,
     )
 
-    if save_results: 
+    if save_results:
         save_data_dir = os.path.join(
-            params['output_path'],
-            "top%d_candidates" % params['top_k'],
+            params["output_path"],
+            "top%d_candidates" % params["top_k"],
         )
         if not os.path.exists(save_data_dir):
             os.makedirs(save_data_dir)
-        save_data_path = os.path.join(save_data_dir, "%s.t7" % params['mode'])
+        save_data_path = os.path.join(save_data_dir, "%s.t7" % params["mode"])
         torch.save(new_data, save_data_path)
 
 
@@ -306,7 +302,7 @@ if __name__ == "__main__":
 
     params = args.__dict__
 
-    mode_list = params["mode"].split(',')
+    mode_list = params["mode"].split(",")
     for mode in mode_list:
         new_params = params
         new_params["mode"] = mode

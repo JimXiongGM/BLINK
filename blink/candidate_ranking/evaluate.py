@@ -296,4 +296,3 @@ if __name__ == "__main__":
 
     parameters = args.__dict__
     evaluate(parameters, logger=utils.get_logger())
-

@@ -68,8 +68,8 @@ chmod +x download_blink_models.sh
 
 We additionally provide a [FAISS](https://github.com/facebookresearch/faiss) indexer in BLINK, which enables efficient exact/approximate retrieval for biencoder model.
 
-- [flat index](http://dl.fbaipublicfiles.com/BLINK//faiss_flat_index.pkl)
-- [hnsw (approximate search) index](http://dl.fbaipublicfiles.com/BLINK/faiss_hnsw_index.pkl)
+- [flat index 长度： 24180846637 (23G)](http://dl.fbaipublicfiles.com/BLINK//faiss_flat_index.pkl)
+- [hnsw (approximate search) index 长度： 30344379206 (28G)](http://dl.fbaipublicfiles.com/BLINK/faiss_hnsw_index.pkl)
 
 
 To build and save FAISS (exact search) index yourself, run
@@ -77,6 +77,7 @@ To build and save FAISS (exact search) index yourself, run
 
 
 ### 3. Use BLINK interactively
+
 A quick way to explore the BLINK linking capabilities is through the `main_dense` interactive script. BLINK uses [Flair](https://github.com/flairNLP/flair) for Named Entity Recognition (NER) to obtain entity mentions from input text, then run entity linking. 
 
 ```console

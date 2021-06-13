@@ -51,16 +51,14 @@ def get_topk_predictions(
 
     for i in range(world_size):
         stats[i] = Stats(top_k)
-    
+
     oid = 0
     for step, batch in enumerate(iter_):
         batch = tuple(t.to(device) for t in batch)
         context_input, _, srcs, label_ids = batch
         src = srcs[0].item()
         scores = reranker.score_candidate(
-            context_input, 
-            None, 
-            cand_encs=cand_encode_list[src].to(device)
+            context_input, None, cand_encs=cand_encode_list[src].to(device)
         )
         values, indicies = scores.topk(top_k)
         old_src = src
@@ -72,9 +70,7 @@ def get_topk_predictions(
                 src = srcs[i].item()
                 # not the same domain, need to re-do
                 new_scores = reranker.score_candidate(
-                    context_input[[i]], 
-                    None,
-                    cand_encs=cand_encode_list[src].to(device)
+                    context_input[[i]], None, cand_encs=cand_encode_list[src].to(device)
                 )
                 _, inds = new_scores.topk(top_k)
                 inds = inds[0]
@@ -115,13 +111,12 @@ def get_topk_predictions(
     nn_candidates = torch.LongTensor(nn_candidates)
     nn_labels = torch.LongTensor(nn_labels)
     nn_data = {
-        'context_vecs': nn_context,
-        'candidate_vecs': nn_candidates,
-        'labels': nn_labels,
+        "context_vecs": nn_context,
+        "candidate_vecs": nn_candidates,
+        "labels": nn_labels,
     }
 
     if is_zeshel:
         nn_data["worlds"] = torch.LongTensor(nn_worlds)
-    
-    return nn_data
 
+    return nn_data

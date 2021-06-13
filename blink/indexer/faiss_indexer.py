@@ -70,7 +70,7 @@ class DenseFlatIndexer(DenseIndexer):
 # DenseHNSWFlatIndexer does approximate search
 class DenseHNSWFlatIndexer(DenseIndexer):
     """
-     Efficient index for retrieval. Note: default settings are for hugh accuracy but also high RAM usage
+    Efficient index for retrieval. Note: default settings are for hugh accuracy but also high RAM usage
     """
 
     def __init__(

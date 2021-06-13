@@ -13,7 +13,6 @@ import blink.biencoder.data_process as data
 from blink.common.params import ENT_START_TAG, ENT_END_TAG
 
 
-
 def prepare_crossencoder_mentions(
     tokenizer,
     samples,

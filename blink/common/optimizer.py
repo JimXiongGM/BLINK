@@ -21,31 +21,31 @@ from pytorch_transformers.optimization import AdamW
 
 
 patterns_optimizer = {
-    'additional_layers': ['additional'],
-    'top_layer': ['additional', 'bert_model.encoder.layer.11.'],
-    'top4_layers': [
-        'additional',
-        'bert_model.encoder.layer.11.',
-        'encoder.layer.10.',
-        'encoder.layer.9.',
-        'encoder.layer.8',
+    "additional_layers": ["additional"],
+    "top_layer": ["additional", "bert_model.encoder.layer.11."],
+    "top4_layers": [
+        "additional",
+        "bert_model.encoder.layer.11.",
+        "encoder.layer.10.",
+        "encoder.layer.9.",
+        "encoder.layer.8",
     ],
-    'all_encoder_layers': ['additional', 'bert_model.encoder.layer'],
-    'all': ['additional', 'bert_model.encoder.layer', 'bert_model.embeddings'],
+    "all_encoder_layers": ["additional", "bert_model.encoder.layer"],
+    "all": ["additional", "bert_model.encoder.layer", "bert_model.embeddings"],
 }
 
+
 def get_bert_optimizer(models, type_optimization, learning_rate, fp16=False):
-    """ Optimizes the network with AdamWithDecay
-    """
+    """Optimizes the network with AdamWithDecay"""
     if type_optimization not in patterns_optimizer:
         print(
-            'Error. Type optimizer must be one of %s' % (str(patterns_optimizer.keys()))
+            "Error. Type optimizer must be one of %s" % (str(patterns_optimizer.keys()))
         )
     parameters_with_decay = []
     parameters_with_decay_names = []
     parameters_without_decay = []
     parameters_without_decay_names = []
-    no_decay = ['bias', 'gamma', 'beta']
+    no_decay = ["bias", "gamma", "beta"]
     patterns = patterns_optimizer[type_optimization]
 
     for model in models:
@@ -58,19 +58,17 @@ def get_bert_optimizer(models, type_optimization, learning_rate, fp16=False):
                     parameters_with_decay.append(p)
                     parameters_with_decay_names.append(n)
 
-    print('The following parameters will be optimized WITH decay:')
-    print(ellipse(parameters_with_decay_names, 5, ' , '))
-    print('The following parameters will be optimized WITHOUT decay:')
-    print(ellipse(parameters_without_decay_names, 5, ' , '))
+    print("The following parameters will be optimized WITH decay:")
+    print(ellipse(parameters_with_decay_names, 5, " , "))
+    print("The following parameters will be optimized WITHOUT decay:")
+    print(ellipse(parameters_without_decay_names, 5, " , "))
 
     optimizer_grouped_parameters = [
-        {'params': parameters_with_decay, 'weight_decay': 0.01},
-        {'params': parameters_without_decay, 'weight_decay': 0.0},
+        {"params": parameters_with_decay, "weight_decay": 0.01},
+        {"params": parameters_without_decay, "weight_decay": 0.0},
     ]
     optimizer = AdamW(
-        optimizer_grouped_parameters, 
-        lr=learning_rate, 
-        correct_bias=False
+        optimizer_grouped_parameters, lr=learning_rate, correct_bias=False
     )
 
     if fp16:
@@ -79,7 +77,7 @@ def get_bert_optimizer(models, type_optimization, learning_rate, fp16=False):
     return optimizer
 
 
-def ellipse(lst, max_display=5, sep='|'):
+def ellipse(lst, max_display=5, sep="|"):
     """
     Like join, but possibly inserts an ellipsis.
     :param lst: The list to join on
@@ -91,6 +89,6 @@ def ellipse(lst, max_display=5, sep='|'):
     choices = list(lst)
     # insert the ellipsis if necessary
     if max_display > 0 and len(choices) > max_display:
-        ellipsis = '...and {} more'.format(len(choices) - max_display)
+        ellipsis = "...and {} more".format(len(choices) - max_display)
         choices = choices[:max_display] + [ellipsis]
     return sep.join(str(c) for c in choices)

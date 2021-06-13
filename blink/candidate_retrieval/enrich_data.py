@@ -186,4 +186,3 @@ output_file_path = os.path.join(data_folder, output_file_name)
 
 print("Dumping", output_file_path)
 pickle.dump(title2parsed_obj, open(output_file_path, "wb"), protocol=4)
-

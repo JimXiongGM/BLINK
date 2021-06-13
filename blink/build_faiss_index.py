@@ -16,14 +16,17 @@ import blink.candidate_ranking.utils as utils
 
 logger = utils.get_logger()
 
-def main(params): 
+
+def main(params):
     output_path = params["output_path"]
     output_dir, _ = os.path.split(output_path)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     logger = utils.get_logger(output_dir)
 
-    logger.info("Loading candidate encoding from path: %s" % params["candidate_encoding"])
+    logger.info(
+        "Loading candidate encoding from path: %s" % params["candidate_encoding"]
+    )
     candidate_encoding = torch.load(params["candidate_encoding"])
     vector_size = candidate_encoding.size(1)
     index_buffer = params["index_buffer"]
@@ -42,7 +45,7 @@ def main(params):
         index.serialize(output_path)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--output_path",
@@ -57,15 +60,19 @@ if __name__ == '__main__':
         help="file path for candidte encoding.",
     )
     parser.add_argument(
-        "--hnsw", action='store_true', 
-        help='If enabled, use inference time efficient HNSW index',
+        "--hnsw",
+        action="store_true",
+        help="If enabled, use inference time efficient HNSW index",
     )
     parser.add_argument(
-        "--save_index", action='store_true', 
-        help='If enabled, save index',
+        "--save_index",
+        action="store_true",
+        help="If enabled, save index",
     )
     parser.add_argument(
-        '--index_buffer', type=int, default=50000,
+        "--index_buffer",
+        type=int,
+        default=50000,
         help="Temporal memory data buffer size (in samples) for indexer",
     )
 

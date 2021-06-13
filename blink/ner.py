@@ -17,11 +17,11 @@ class NER_model:
         pass
 
     def predict(self, sents):
-        """Sents: List of plain text consequtive sentences. 
+        """Sents: List of plain text consequtive sentences.
         Returns a dictionary consisting of a list of sentences and a list of mentions, where for each mention AT LEAST (it may give additional information) the following information is given:
             sent_idx - the index of the sentence that contains the mention
             text - the textual span that we hypothesise that represents an entity
-            start_pos - the character idx at which the textual mention starts 
+            start_pos - the character idx at which the textual mention starts
             end_pos - the character idx at which the mention ends"""
         pass
 
@@ -40,4 +40,3 @@ class Flair(NER_model):
                 mention["sent_idx"] = sent_idx
             mentions.extend(sent_mentions)
         return {"sentences": sentences, "mentions": mentions}
-
