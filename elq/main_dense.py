@@ -7,7 +7,7 @@
 import argparse
 import json
 import sys
-from elq.index.faiss_indexer import (
+from index.faiss_indexer import (
     DenseFlatIndexer,
     DenseHNSWFlatIndexer,
     DenseIVFFlatIndexer,
@@ -22,17 +22,17 @@ import torch.nn.functional as F
 
 import ner as NER
 from torch.utils.data import DataLoader, SequentialSampler, TensorDataset
-from elq.biencoder.biencoder import BiEncoderRanker, load_biencoder, to_bert_input
-from elq.biencoder.data_process import (
+from biencoder.biencoder import BiEncoderRanker, load_biencoder, to_bert_input
+from biencoder.data_process import (
     process_mention_data,
     get_context_representation_single_mention,
     get_candidate_representation,
 )
-import elq.candidate_ranking.utils as utils
+import candidate_ranking.utils as utils
 import math
 
-from elq.vcg_utils.measures import entity_linking_tp_with_overlap
-from elq.biencoder.utils import batch_reshape_mask_left
+from vcg_utils.measures import entity_linking_tp_with_overlap
+from biencoder.utils import batch_reshape_mask_left
 
 import os
 import sys
@@ -52,7 +52,7 @@ HIGHLIGHTS = [
 
 from transformers import BertTokenizer
 
-tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = BertTokenizer.from_pretrained("pretrained_models/bert-base-uncased")
 
 
 def _print_colorful_text(input_tokens, tokenizer, pred_triples):
@@ -131,7 +131,7 @@ def _load_candidates(
 
     candidate_encoding = torch.load(entity_encoding)
 
-    if not os.path.exists("models/id2title.json"):
+    if not os.path.exists("blink_elq_data/elq/models/id2title.json"):
         id2title = {}
         id2text = {}
         id2wikidata = {}
@@ -145,19 +145,19 @@ def _load_candidates(
                 if "kb_idx" in entity:
                     id2wikidata[str(local_idx)] = entity["kb_idx"]
                 local_idx += 1
-        json.dump(id2title, open("models/id2title.json", "w"))
-        json.dump(id2text, open("models/id2text.json", "w"))
-        json.dump(id2wikidata, open("models/id2wikidata.json", "w"))
+        json.dump(id2title, open("blink_elq_data/elq/models/id2title.json", "w"))
+        json.dump(id2text, open("blink_elq_data/elq/models/id2text.json", "w"))
+        json.dump(id2wikidata, open("blink_elq_data/elq/models/id2wikidata.json", "w"))
     else:
         if logger:
             logger.info("Loading id2title")
-        id2title = json.load(open("models/id2title.json"))
+        id2title = json.load(open("blink_elq_data/elq/models/id2title.json"))
         if logger:
             logger.info("Loading id2text")
-        id2text = json.load(open("models/id2text.json"))
+        id2text = json.load(open("blink_elq_data/elq/models/id2text.json"))
         if logger:
             logger.info("Loading id2wikidata")
-        id2wikidata = json.load(open("models/id2wikidata.json"))
+        id2wikidata = json.load(open("blink_elq_data/elq/models/id2wikidata.json"))
 
     return (
         candidate_encoding,
@@ -833,6 +833,9 @@ def load_models(args, logger):
                 line = line.replace("None", "null")
                 biencoder_params = json.loads(line)
                 break
+
+    biencoder_params["bert_model"] = "pretrained_models/bert-large-uncased"
+
     biencoder_params["path_to_model"] = args.biencoder_model
     biencoder_params["cand_token_ids_path"] = args.cand_token_ids_path
     biencoder_params["eval_batch_size"] = getattr(args, "eval_batch_size", 8)
@@ -1152,6 +1155,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--interactive", "-i", action="store_true", help="Interactive mode."
     )
+    parser.set_defaults(interactive=True)
 
     # test_data
     parser.add_argument(
@@ -1162,7 +1166,7 @@ if __name__ == "__main__":
         dest="test_entities",
         type=str,
         help="Test Entities.",
-        default="models/entity.jsonl",  # ALL WIKIPEDIA!
+        default="blink_elq_data/elq/models/entity.jsonl",  # ALL WIKIPEDIA!
     )
 
     parser.add_argument(
@@ -1212,35 +1216,35 @@ if __name__ == "__main__":
         "--biencoder_model",
         dest="biencoder_model",
         type=str,
-        default="models/elq_wiki_large.bin",
+        default="blink_elq_data/elq/models/elq_wiki_large.bin",
         help="Path to the biencoder model.",
     )
     parser.add_argument(
         "--biencoder_config",
         dest="biencoder_config",
         type=str,
-        default="models/elq_large_params.txt",
+        default="blink_elq_data/elq/models/elq_large_params.txt",
         help="Path to the biencoder configuration.",
     )
     parser.add_argument(
         "--cand_token_ids_path",
         dest="cand_token_ids_path",
         type=str,
-        default="models/entity_token_ids_128.t7",  # ALL WIKIPEDIA!
+        default="blink_elq_data/elq/models/entity_token_ids_128.t7",  # ALL WIKIPEDIA!
         help="Path to tokenized entity catalogue",
     )
     parser.add_argument(
         "--entity_catalogue",
         dest="entity_catalogue",
         type=str,
-        default="models/entity.jsonl",  # ALL WIKIPEDIA!
+        default="blink_elq_data/elq/models/entity.jsonl",  # ALL WIKIPEDIA!
         help="Path to the entity catalogue.",
     )
     parser.add_argument(
         "--entity_encoding",
         dest="entity_encoding",
         type=str,
-        default="models/all_entities_large.t7",  # ALL WIKIPEDIA!
+        default="blink_elq_data/elq/models/all_entities_large.t7",  # ALL WIKIPEDIA!
         help="Path to the entity catalogue.",
     )
     parser.add_argument(
@@ -1262,7 +1266,7 @@ if __name__ == "__main__":
         "--index_path",
         dest="index_path",
         type=str,
-        default="models/faiss_hnsw_index.pkl",
+        default="blink_elq_data/elq/models/faiss_hnsw_index.pkl",
         help="path to load indexer",
     )
     parser.add_argument(
@@ -1285,7 +1289,7 @@ if __name__ == "__main__":
         "--use_cuda",
         dest="use_cuda",
         action="store_true",
-        default=False,
+        default=True,
         help="run on gpu",
     )
     parser.add_argument(

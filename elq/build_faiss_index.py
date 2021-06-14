@@ -11,12 +11,12 @@ import os
 import time
 import torch
 
-from elq.index.faiss_indexer import (
+from index.faiss_indexer import (
     DenseFlatIndexer,
     DenseIVFFlatIndexer,
     DenseHNSWFlatIndexer,
 )
-import elq.candidate_ranking.utils as utils
+import candidate_ranking.utils as utils
 
 logger = utils.get_logger()
 

@@ -31,16 +31,16 @@ from pytorch_transformers.file_utils import PYTORCH_PRETRAINED_BERT_CACHE
 from pytorch_transformers.optimization import WarmupLinearSchedule
 from pytorch_transformers.tokenization_bert import BertTokenizer
 
-from elq.biencoder.biencoder import BiEncoderRanker
-from elq.vcg_utils.measures import entity_linking_tp_with_overlap
+from biencoder.biencoder import BiEncoderRanker
+from vcg_utils.measures import entity_linking_tp_with_overlap
 import logging
 
-import elq.candidate_ranking.utils as utils
-from elq.biencoder.data_process import process_mention_data
+import candidate_ranking.utils as utils
+from biencoder.data_process import process_mention_data
 from biencoder.zeshel_utils import DOC_PATH, WORLDS, world_to_id
 from common.optimizer import get_bert_optimizer
-from elq.common.params import ElqParser
-from elq.index.faiss_indexer import (
+from common.params import ElqParser
+from index.faiss_indexer import (
     DenseFlatIndexer,
     DenseHNSWFlatIndexer,
     DenseIVFFlatIndexer,

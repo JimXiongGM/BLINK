@@ -697,13 +697,15 @@ if __name__ == "__main__":
         help="whether to show entity url in interactive mode",
     )
 
+    # 重要！否则要加载23G的矩阵 all_entities_large.t7 ，内存不足
     parser.add_argument(
         "--faiss_index",
         type=str,
-        default=None,
-        help="whether to use faiss index",
+        default="flat",
+        help="whether to use faiss index 支持 flat; hnsw",
     )
 
+    # 重要 
     parser.add_argument(
         "--index_path",
         type=str,

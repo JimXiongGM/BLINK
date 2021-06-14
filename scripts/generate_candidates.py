@@ -6,8 +6,8 @@
 #
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
-from elq.biencoder.biencoder import load_biencoder
-import elq.candidate_ranking.utils as utils
+from biencoder.biencoder import load_biencoder
+import candidate_ranking.utils as utils
 import json
 import sys
 import os

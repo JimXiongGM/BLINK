@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from pytorch_transformers.tokenization_bert import BertTokenizer
 
 from biencoder.zeshel_utils import world_to_id
-from elq.common.params import ENT_START_TAG, ENT_END_TAG, ENT_TITLE_TAG
+from common.params import ENT_START_TAG, ENT_END_TAG, ENT_TITLE_TAG
 
 
 def select_field_with_padding(data, key1, key2=None, pad_idx=-1):
