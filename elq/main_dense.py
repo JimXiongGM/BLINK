@@ -112,7 +112,10 @@ def _load_candidates(
     logger=None,
 ):
     if faiss_index == "none":
-        candidate_encoding = torch.load(entity_encoding)
+        # 一个超大的矩阵，占内存 23G。all_entities_large.t7
+        candidate_encoding = torch.load(
+            entity_encoding
+        )
         indexer = None
     else:
         candidate_encoding = None
@@ -127,18 +130,19 @@ def _load_candidates(
             raise ValueError(
                 "Error! Unsupported indexer type! Choose from flat,hnsw,ivfflat."
             )
-        indexer.deserialize_from(index_path)
-
-    candidate_encoding = torch.load(entity_encoding)
+        indexer.deserialize_from(index_path)  # 29G，占内存 elq/models/faiss_hnsw_index.pkl
 
     if not os.path.exists("blink_elq_data/elq/models/id2title.json"):
+        # 这里要先缓存，否则内存不足
         id2title = {}
         id2text = {}
         id2wikidata = {}
         local_idx = 0
-        with open(entity_catalogue, "r") as fin:
+        with open(
+            entity_catalogue, "r"
+        ) as fin:  # 'blink_elq_data/elq/models/entity.jsonl' 3.3G
             lines = fin.readlines()
-            for line in lines:
+            for line in tqdm(lines, desc="parsing id2 title/text/wikidata"):
                 entity = json.loads(line)
                 id2title[str(local_idx)] = entity["title"]
                 id2text[str(local_idx)] = entity["text"]
@@ -1226,11 +1230,14 @@ if __name__ == "__main__":
         default="blink_elq_data/elq/models/elq_large_params.txt",
         help="Path to the biencoder configuration.",
     )
+
+    # 这个参数和faiss索引只需要一个就行了！！
+    # "blink_elq_data/elq/models/entity_token_ids_128.t7"
     parser.add_argument(
         "--cand_token_ids_path",
         dest="cand_token_ids_path",
         type=str,
-        default="blink_elq_data/elq/models/entity_token_ids_128.t7",  # ALL WIKIPEDIA!
+        default=None,  # ALL WIKIPEDIA!
         help="Path to tokenized entity catalogue",
     )
     parser.add_argument(

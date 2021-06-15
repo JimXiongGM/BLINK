@@ -70,36 +70,36 @@ class MentionScoresHead(nn.Module):
         """
         Retuns scores for *inclusive* mention boundaries
         """
-        # (bs, seqlen, 3)
+        # (bs, seqlen, 3)   bert_output是[bs, seq_len, 1024]，这里直接使用线性层构建为(bs, seqlen, 3) 
         logits = self.bound_classifier(bert_output)
         if self.scoring_method[:2] == "qa":
-            # (bs, seqlen, 1); (bs, seqlen, 1); (bs, seqlen, 1)
+            # (bs, seqlen, 1); (bs, seqlen, 1); (bs, seqlen, 1) 重点！对每一个位置都计算3个得分！
             start_logprobs, end_logprobs, mention_logprobs = logits.split(1, dim=-1)
             # (bs, seqlen)
             start_logprobs = start_logprobs.squeeze(-1)
             end_logprobs = end_logprobs.squeeze(-1)
             mention_logprobs = mention_logprobs.squeeze(-1)
-            # impossible to choose masked tokens as starts/ends of spans
+            # impossible to choose masked tokens as starts/ends of spans 不等于1的地方直接置为负无穷
             start_logprobs[~mask_ctxt] = -float("Inf")
             end_logprobs[~mask_ctxt] = -float("Inf")
             mention_logprobs[~mask_ctxt] = -float("Inf")
 
             # take sum of log softmaxes:
             # log p(mention) = log p(start_pos && end_pos) = log p(start_pos) + log p(end_pos)
-            # DIM: (bs, starts, ends)
+            # DIM: (bs, starts, ends) 重点！两个[bsz, seqlen, 1]，构建一个转移矩阵[bs, seqlen, seqlen]
             mention_scores = start_logprobs.unsqueeze(2) + end_logprobs.unsqueeze(1)
-            # (bs, starts, ends)
+            # (bs, starts, ends) 和转移矩阵[bs, seqlen, seqlen]一样大的累计概率矩阵
             mention_cum_scores = torch.zeros(
                 mention_scores.size(), dtype=mention_scores.dtype
             ).to(mention_scores.device)
-            # add ends
+            # add ends 维度是[bs]
             mention_logprobs_end_cumsum = torch.zeros(
                 mask_ctxt.size(0), dtype=mention_scores.dtype
             ).to(mention_scores.device)
-            for i in range(mask_ctxt.size(1)):
-                mention_logprobs_end_cumsum += mention_logprobs[:, i]
-                mention_cum_scores[:, :, i] += mention_logprobs_end_cumsum.unsqueeze(-1)
-            # subtract starts
+            for i in range(mask_ctxt.size(1)): # 就是seqlen
+                mention_logprobs_end_cumsum += mention_logprobs[:, i] # 为什么要计算累计end概率？
+                mention_cum_scores[:, :, i] += mention_logprobs_end_cumsum.unsqueeze(-1) # (bs, starts, ends)的ends维度赋值
+            # subtract starts 累计start矩阵
             mention_logprobs_start_cumsum = torch.zeros(
                 mask_ctxt.size(0), dtype=mention_scores.dtype
             ).to(mention_scores.device)
@@ -107,17 +107,17 @@ class MentionScoresHead(nn.Module):
                 mention_logprobs_start_cumsum += mention_logprobs[:, i]
                 mention_cum_scores[
                     :, (i + 1), :
-                ] -= mention_logprobs_start_cumsum.unsqueeze(-1)
+                ] -= mention_logprobs_start_cumsum.unsqueeze(-1) # (bs, starts, ends)的start维度减去？？
 
             # DIM: (bs, starts, ends)
-            mention_scores += mention_cum_scores
+            mention_scores += mention_cum_scores # mention_cum_scores矩阵，end维度是每个token位置的累加，start维度减去每个位置的累加？
 
             # DIM: (starts, ends, 2) -- tuples of [start_idx, end_idx]
             mention_bounds = torch.stack(
                 [
                     torch.arange(mention_scores.size(1))
-                    .unsqueeze(-1)
-                    .expand(
+                    .unsqueeze(-1) # -1和0差别很大，-1的结果是列向量，0是行向量
+                    .expand( # -1，列向量expand，每一行中的value是一样的
                         mention_scores.size(1), mention_scores.size(2)
                     ),  # start idxs
                     torch.arange(mention_scores.size(1))
@@ -132,17 +132,17 @@ class MentionScoresHead(nn.Module):
             )  # (+1 as ends are inclusive)
 
             # Remove invalids (startpos > endpos, endpos > seqlen) and renormalize
-            # DIM: (bs, starts, ends)
-            valid_mask = (mention_sizes.unsqueeze(0) > 0) & mask_ctxt.unsqueeze(1)
+            # DIM: (bs, starts, ends) 搞半天就是一个带对角线的上三角矩阵，用来表示转移矩阵中可以使用的index组合
+            valid_mask = (mention_sizes.unsqueeze(0) > 0) & mask_ctxt.unsqueeze(1) # mask_ctxt就是[bs, seqlen]的bool矩阵
             # DIM: (bs, starts, ends)
             mention_scores[~valid_mask] = -float(
                 "inf"
             )  # invalids have logprob=-inf (p=0)
             # DIM: (bs, starts * ends)
             mention_scores = mention_scores.view(mention_scores.size(0), -1)
-            # DIM: (bs, starts * ends, 2)
+            # DIM: (bs * starts * ends, 2)
             mention_bounds = mention_bounds.view(-1, 2)
-            mention_bounds = mention_bounds.unsqueeze(0).expand(
+            mention_bounds = mention_bounds.unsqueeze(0).expand( # (1, bs * starts * ends, 2)
                 mention_scores.size(0), mention_scores.size(1), 2
             )
 
@@ -370,7 +370,7 @@ class BiEncoderModule(torch.nn.Module):
                 mask_ctxt,
             )
 
-        # (num_total_mentions,); (num_total_mentions,)
+        # (num_total_mentions,); (num_total_mentions,) 调用叫做mention_scores的子模块 MentionScoresHead 计算score
         return self.classification_heads["mention_scores"](
             raw_ctxt_encoding,
             mask_ctxt,
@@ -511,7 +511,7 @@ class BiEncoderModule(torch.nn.Module):
             """
             NEW system: aggregate mention tokens
             """
-            # (bs, seqlen, embed_size)
+            # (bs, seqlen, embed_size) 这里直接调用了transformer库的embed函数
             raw_ctxt_encoding = self.get_raw_ctxt_encoding(
                 token_idx_ctxt,
                 segment_idx_ctxt,
